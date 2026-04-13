@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kings League - Mini Game</title>
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png" type="image/png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
@@ -22,13 +24,12 @@
             box-shadow: 0 0 40px rgba(249, 115, 22, 0.15); 
             border-radius: 12px;
         }
-        .neon-text-orange { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px #f97316; }
-        .neon-text-blue { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px #3b82f6; }
         
         #messageBox {
             text-shadow: 0px 4px 20px rgba(0, 0, 0, 0.9);
         }
 
+        /* Stili Carte Segrete (Verdine con Logo Spotify) */
         .card-select { perspective: 1000px; cursor: pointer; }
         .card-select-inner {
             position: relative; width: 140px; height: 200px;
@@ -41,19 +42,23 @@
             position: absolute; width: 100%; height: 100%;
             -webkit-backface-visibility: hidden; backface-visibility: hidden;
             border-radius: 16px; display: flex; align-items: center; justify-content: center;
-            text-align: center; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center; padding: 15px; 
         }
         .card-back {
-            background: radial-gradient(circle at center, #27272a 0%, #09090b 100%);
-            border: 2px solid #52525b; color: #d4d4d8; font-size: 4rem; font-weight: 900;
+            background: radial-gradient(circle at center, #18181b 0%, #09090b 100%);
+            border: 3px solid #22c55e; /* Bordo verdino */
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3), inset 0 0 15px rgba(34, 197, 94, 0.1);
+            color: #d4d4d8; 
+            font-size: 4rem; 
+            font-weight: 900;
         }
         .card-front {
             transform: rotateY(180deg); flex-direction: column;
-            border: 3px solid rgba(255,255,255,0.2);
-            text-shadow: 0px 2px 4px rgba(0,0,0,0.8); /* Alta visibilità testo carte */
+            border: 3px solid rgba(255,255,255,0.3);
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        /* Stili Badge E-Sports (Fallback sicuro al posto delle immagini locali) */
         .team-badge {
             background-color: #111;
             border-radius: 16px; display: flex; align-items: center; justify-content: center;
@@ -74,20 +79,23 @@
             font-size: 3.5rem; margin-bottom: 5px; z-index: 2;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8));
         }
-        /* Nuova classe per le immagini nei badge */
         .team-badge-img {
-            width: 60px; height: 60px; object-fit: contain;
-            margin-bottom: 5px; z-index: 2;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8));
+            width: 70px; height: 70px; object-fit: contain; margin-bottom: 5px; z-index: 2;
         }
         .team-badge-text {
             font-weight: 900; font-size: 1.25rem; letter-spacing: -0.05em; z-index: 2;
-            text-shadow: 0 2px 5px rgba(0,0,0,1), 0 0 10px rgba(0,0,0,0.8); /* Altissimo contrasto */
+            text-shadow: 0 2px 5px rgba(0,0,0,1), 0 0 10px rgba(0,0,0,0.8);
         }
-        
-        .score-name {
-            text-shadow: 0 2px 4px rgba(0,0,0,1);
-            font-size: 0.85rem;
+
+        /* Nuovo Scoreboard Unito con Lati Triangolari */
+        .unified-scoreboard-wrapper {
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6));
+        }
+        .score-panel-left {
+            clip-path: polygon(15px 0, 100% 0, 100% 100%, 0 100%);
+        }
+        .score-panel-right {
+            clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 100%, 0 100%);
         }
     </style>
 </head>
@@ -100,73 +108,93 @@
         <div id="teamGrid" class="grid grid-cols-4 md:grid-cols-6 gap-6 max-w-5xl px-4"></div>
     </div>
 
-    <!-- Header / Scoreboard -->
-    <div class="absolute top-6 w-full flex justify-center items-start gap-6 z-10 pointer-events-none">
-        <div class="bg-zinc-900/90 border border-zinc-700 p-4 rounded-2xl shadow-2xl flex flex-col items-center gap-2 backdrop-blur-sm relative">
-            <div class="flex items-center gap-6">
-                <div class="flex flex-col items-center">
-                    <span id="playerNameUI" class="score-name font-bold tracking-widest uppercase mb-1" style="color: #f97316;">Stallions (Tu)</span>
-                    <span id="scoreLeft" class="text-5xl font-black text-white leading-none">0</span>
-                </div>
-                <div class="text-zinc-600 text-3xl font-light">-</div>
-                <div class="flex flex-col items-center">
-                    <span id="botNameUI" class="score-name font-bold tracking-widest uppercase mb-1" style="color: #3b82f6;">Zebras (Bot)</span>
-                    <span id="scoreRight" class="text-5xl font-black text-white leading-none">0</span>
+    <!-- Header / Scoreboard Unificato Triangolare -->
+    <div class="absolute top-4 w-full flex justify-center items-start z-10 pointer-events-none px-6">
+        <div class="unified-scoreboard-wrapper flex items-stretch h-14">
+            
+            <!-- Lato Player (Taglio Triangolare a sinistra) -->
+            <div id="playerScoreCard" class="score-panel-left flex items-center justify-between px-4 bg-zinc-800 transition-colors duration-300 relative z-0" style="width: 200px; margin-right: -8px;">
+                <div id="playerLogoUI" class="w-8 h-8 flex items-center justify-center text-2xl drop-shadow-md"></div>
+                <div class="flex flex-col items-end pr-2">
+                    <span id="playerNameUI" class="text-[9px] font-black tracking-widest uppercase text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Tu</span>
+                    <span id="scoreLeft" class="text-3xl font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">0</span>
                 </div>
             </div>
-            <div id="doubleGoalIndicator" class="hidden w-full bg-red-600/20 border border-red-500 rounded text-red-500 text-xs font-bold py-1 px-2 text-center uppercase animate-pulse mt-2">
-                Gol Doppio: <span id="doubleGoalTimerUI">60</span>s
-            </div>
-            <div id="starPlayerIndicator" class="hidden w-full bg-yellow-400/20 border border-yellow-400 rounded text-yellow-400 text-xs font-bold py-1 px-2 text-center uppercase mt-2">
-                ⭐ Star Player Attivo
-            </div>
-        </div>
 
-        <div class="bg-zinc-900/90 border border-zinc-700 px-6 py-4 rounded-2xl shadow-2xl flex flex-col items-center backdrop-blur-sm">
-            <span class="text-[10px] text-zinc-400 font-bold tracking-widest uppercase mb-1">Tempo</span>
-            <div id="timer" class="text-3xl font-mono font-bold text-white leading-none">03:00</div>
+            <!-- Centro (Timer) -->
+            <div class="px-6 flex flex-col items-center justify-center bg-zinc-900 border-y-2 border-zinc-700 relative z-10">
+                <span class="text-[9px] text-zinc-400 font-bold tracking-widest uppercase mb-0.5">Tempo</span>
+                <div id="timer" class="text-2xl font-mono font-bold text-white leading-none">03:00</div>
+            </div>
+
+            <!-- Lato Bot (Taglio Triangolare a destra) -->
+            <div id="botScoreCard" class="score-panel-right flex items-center justify-between px-4 bg-zinc-800 transition-colors duration-300 relative z-0" style="width: 200px; margin-left: -8px;">
+                <div class="flex flex-col items-start pl-2">
+                    <span id="botNameUI" class="text-[9px] font-black tracking-widest uppercase text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Bot</span>
+                    <span id="scoreRight" class="text-3xl font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">0</span>
+                </div>
+                <div id="botLogoUI" class="w-8 h-8 flex items-center justify-center text-2xl drop-shadow-md"></div>
+            </div>
+
         </div>
     </div>
 
-    <div class="absolute top-32 text-zinc-500 text-sm font-medium tracking-wide pointer-events-none text-shadow-sm">
-        Usa i tasti <span class="text-white">W A S D</span> o le <span class="text-white">Frecce</span> per muoverti.
+    <!-- Indicatori Carte Segrete -->
+    <div class="absolute top-20 w-full flex justify-center gap-4 z-10 pointer-events-none px-6">
+        <div class="flex-1 flex flex-col items-end">
+            <div id="playerDoubleGoalIndicator" class="hidden bg-red-600/90 border border-red-400 rounded-lg text-white text-[10px] font-bold py-1 px-2 uppercase shadow-lg mb-1">
+                Gol Doppio: <span id="playerDoubleGoalTimerUI">60</span>s
+            </div>
+            <div id="starPlayerIndicator" class="hidden bg-yellow-500/90 border border-yellow-300 rounded-lg text-black text-[10px] font-bold py-1 px-2 uppercase shadow-lg">
+                ⭐ Star Player
+            </div>
+        </div>
+        <div class="w-24"></div> <!-- Spazio per timer -->
+        <div class="flex-1 flex flex-col items-start">
+            <div id="botDoubleGoalIndicator" class="hidden bg-purple-600/90 border border-purple-400 rounded-lg text-white text-[10px] font-bold py-1 px-2 uppercase shadow-lg mb-1">
+                Gol Doppio: <span id="botDoubleGoalTimerUI">60</span>s
+            </div>
+            <div id="botStarPlayerIndicator" class="hidden bg-purple-500/90 border border-purple-300 rounded-lg text-white text-[10px] font-bold py-1 px-2 uppercase shadow-lg">
+                ⭐ Star Player
+            </div>
+        </div>
     </div>
 
     <!-- Messaggi -->
-    <div id="messageBox" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400 opacity-0 transition-opacity duration-300 z-20 pointer-events-none text-center uppercase tracking-tighter scale-150 drop-shadow-2xl whitespace-nowrap">
+    <div id="messageBox" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400 opacity-0 transition-opacity duration-300 z-20 pointer-events-none text-center uppercase tracking-tighter scale-150 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] whitespace-nowrap" style="-webkit-text-stroke: 2px rgba(0,0,0,0.5);">
         EFFETTO!
     </div>
 
-    <canvas id="gameCanvas" width="800" height="450" class="mt-16"></canvas>
+    <canvas id="gameCanvas" width="960" height="540" class="mt-12"></canvas>
 
-    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2">
-        <span class="text-xs text-zinc-400 font-bold tracking-widest uppercase" style="text-shadow: 0 2px 4px rgba(0,0,0,1);">Regola Kings League</span>
-        <button id="cardBtn" class="group relative px-8 py-4 font-black text-zinc-950 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full text-xl hover:scale-105 transition-all duration-200 overflow-hidden shadow-[0_0_30px_rgba(249,115,22,0.4)] hover:shadow-[0_0_50px_rgba(249,115,22,0.6)] cursor-pointer ring-4 ring-zinc-950">
-            <span class="relative z-10 flex items-center gap-2">🃏 ATTIVA CARTA SEGRETA</span>
+    <!-- Bottoni Azioni -->
+    <div class="absolute bottom-4 w-full px-12 flex justify-center gap-8 z-10">
+        <button id="presidentBtn" class="group relative px-6 py-3 font-black text-zinc-950 bg-gradient-to-r from-yellow-300 to-yellow-600 rounded-full text-base hover:scale-105 transition-all duration-200 overflow-hidden shadow-[0_0_20px_rgba(234,179,8,0.4)] cursor-pointer ring-4 ring-zinc-950 flex flex-col items-center">
+            <span class="relative z-10 flex items-center gap-2">👑 RIGORE PRESIDENZIALE</span>
+            <div class="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+        </button>
+
+        <button id="cardBtn" class="group relative px-6 py-3 font-black text-zinc-950 bg-gradient-to-r from-orange-500 to-red-500 rounded-full text-base hover:scale-105 transition-all duration-200 overflow-hidden shadow-[0_0_20px_rgba(249,115,22,0.4)] cursor-pointer ring-4 ring-zinc-950 flex flex-col items-center">
+            <span class="relative z-10 flex items-center gap-2">🃏 ATTIVA CARTA</span>
             <div class="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
         </button>
     </div>
 
     <!-- Regolamento -->
-    <button onclick="document.getElementById('rulesModal').classList.remove('hidden')" class="absolute top-6 right-6 z-20 px-4 py-2 bg-zinc-800/80 border border-zinc-600 text-zinc-300 font-bold rounded-full hover:bg-zinc-700 transition-colors backdrop-blur-sm shadow-lg flex items-center gap-2">
-        <span>❓</span> Regolamento
+    <button onclick="document.getElementById('rulesModal').classList.remove('hidden')" class="absolute top-4 right-4 z-20 px-3 py-1.5 bg-zinc-800/80 border border-zinc-600 text-zinc-300 font-bold rounded-full hover:bg-zinc-700 transition-colors backdrop-blur-sm shadow-lg flex items-center gap-2 text-xs">
+        <span>❓</span> Regole
     </button>
+    
     <div id="rulesModal" class="hidden absolute inset-0 bg-black/80 z-[70] flex items-center justify-center backdrop-blur-sm">
         <div class="bg-zinc-900 border-2 border-orange-500 p-8 rounded-2xl max-w-2xl text-zinc-300 shadow-[0_0_40px_rgba(249,115,22,0.3)] relative mx-4">
             <button onclick="document.getElementById('rulesModal').classList.add('hidden')" class="absolute top-4 right-4 text-zinc-500 hover:text-white font-bold text-3xl leading-none">&times;</button>
             <h2 class="text-4xl font-black text-white italic mb-6 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-500 uppercase">Regolamento</h2>
-            <ul class="space-y-4 text-lg">
-                <li><strong class="text-white">🃏 Carte Segrete Ufficiali:</strong> Pesca una carta a inizio gara.
-                    <ul class="list-disc ml-6 mt-2 text-sm text-zinc-400 space-y-1">
-                        <li><span class="text-red-400">Gol Doppio:</span> Per 60 secondi, ogni gol vale doppio.</li>
-                        <li><span class="text-zinc-200">Rigore:</span> Tiro libero dal dischetto.</li>
-                        <li><span class="text-orange-400">Sospensione:</span> L'avversario viene rimosso per 10 secondi.</li>
-                        <li><span class="text-yellow-400">Star Player:</span> Il tuo prossimo gol varrà doppio.</li>
-                    </ul>
-                </li>
-                <li><strong class="text-white">🟨 Falli e Punizioni:</strong> Schianti ad alta velocità causano un fallo. Il gioco si ferma per un calcio di punizione.</li>
-                <li><strong class="text-white">🎲 Il Dado (1:00):</strong> Le porte diventano GIGANTI nell'ultimo minuto.</li>
-                <li><strong class="text-white">📐 Angoli Bumper:</strong> Gli angoli del campo fanno rimbalzare la palla in diagonale.</li>
+            <ul class="space-y-3 text-base">
+                <li><strong class="text-white">🧑‍🤝‍🧑 Escalation:</strong> Si inizia 1v1. Ogni 10 secondi entra un compagno (gestito dall'IA) fino ad arrivare a 3v3. Tu controlli sempre e solo il capitano (indicato dalla freccia).</li>
+                <li><strong class="text-white">🎲 Il Dado (1:00):</strong> Tre eventi possibili! Porte Giganti, ritorno all'1v1, o palla super veloce!</li>
+                <li><strong class="text-white">👑 Rigore Presidenziale:</strong> Usalo 1 volta per avere un rigore istantaneo, si batte da lontano!</li>
+                <li><strong class="text-white">🃏 Carte Segrete:</strong> Anche il Bot ha la sua carta segreta e la userà a sorpresa.</li>
+                <li><strong class="text-white">🟨 Falli:</strong> Schianti ad alta velocità causano fallo e punizione dalla difesa.</li>
             </ul>
         </div>
     </div>
@@ -184,11 +212,57 @@
     <div id="cardSelectionScreen" class="absolute inset-0 bg-zinc-950/95 z-[60] flex flex-col items-center justify-center transition-opacity duration-700 backdrop-blur-md hidden">
         <h1 class="text-5xl font-black text-white italic mb-12 tracking-tighter drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]">PESCA LA TUA CARTA</h1>
         <div class="flex gap-6" id="cardsContainer">
-            <div class="card-select" onclick="pickCard(this)"><div class="card-select-inner"><div class="card-back">👑</div><div class="card-front"></div></div></div>
-            <div class="card-select" onclick="pickCard(this)"><div class="card-select-inner"><div class="card-back">👑</div><div class="card-front"></div></div></div>
-            <div class="card-select" onclick="pickCard(this)"><div class="card-select-inner"><div class="card-back">👑</div><div class="card-front"></div></div></div>
-            <div class="card-select" onclick="pickCard(this)"><div class="card-select-inner"><div class="card-back">👑</div><div class="card-front"></div></div></div>
-            <div class="card-select" onclick="pickCard(this)"><div class="card-select-inner"><div class="card-back">👑</div><div class="card-front"></div></div></div>
+            <div class="card-select" onclick="pickCard(this)">
+                <div class="card-select-inner">
+                    <div class="card-back">
+                        <!-- Icona stile Spotify Verde -->
+                        <svg viewBox="0 0 24 24" class="w-16 h-16 text-[#22c55e]" fill="currentColor">
+                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24.961zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.181c-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.14 11.28-.9 16.14 2.101.54.3.72 1.02.42 1.56-.24.54-.96.72-1.5.42z"/>
+                        </svg>
+                    </div>
+                    <div class="card-front"></div>
+                </div>
+            </div>
+            <div class="card-select" onclick="pickCard(this)">
+                <div class="card-select-inner">
+                    <div class="card-back">
+                        <svg viewBox="0 0 24 24" class="w-16 h-16 text-[#22c55e]" fill="currentColor">
+                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24.961zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.181c-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.14 11.28-.9 16.14 2.101.54.3.72 1.02.42 1.56-.24.54-.96.72-1.5.42z"/>
+                        </svg>
+                    </div>
+                    <div class="card-front"></div>
+                </div>
+            </div>
+            <div class="card-select" onclick="pickCard(this)">
+                <div class="card-select-inner">
+                    <div class="card-back">
+                        <svg viewBox="0 0 24 24" class="w-16 h-16 text-[#22c55e]" fill="currentColor">
+                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24.961zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.181c-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.14 11.28-.9 16.14 2.101.54.3.72 1.02.42 1.56-.24.54-.96.72-1.5.42z"/>
+                        </svg>
+                    </div>
+                    <div class="card-front"></div>
+                </div>
+            </div>
+            <div class="card-select" onclick="pickCard(this)">
+                <div class="card-select-inner">
+                    <div class="card-back">
+                        <svg viewBox="0 0 24 24" class="w-16 h-16 text-[#22c55e]" fill="currentColor">
+                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24.961zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.181c-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.14 11.28-.9 16.14 2.101.54.3.72 1.02.42 1.56-.24.54-.96.72-1.5.42z"/>
+                        </svg>
+                    </div>
+                    <div class="card-front"></div>
+                </div>
+            </div>
+            <div class="card-select" onclick="pickCard(this)">
+                <div class="card-select-inner">
+                    <div class="card-back">
+                        <svg viewBox="0 0 24 24" class="w-16 h-16 text-[#22c55e]" fill="currentColor">
+                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24.961zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.181c-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.14 11.28-.9 16.14 2.101.54.3.72 1.02.42 1.56-.24.54-.96.72-1.5.42z"/>
+                        </svg>
+                    </div>
+                    <div class="card-front"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -196,20 +270,20 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // DATABASE SQUADRE (Icone ed Emojis sicuri e ad alto contrasto)
+        const stallionsLogoUrl = '691246592.webp';
+
         const teamsInfo = {
-            'APK': { id: 'APK', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/152293839.png', name: 'Alpak FC', main: '#ec4899', sub: '#18181b', text: '#ffffff' }, 
+            'APK': { id: 'APK', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/152293839.png', name: 'Alpak', main: '#ec4899', sub: '#18181b', text: '#ffffff' }, 
             'BRO': { id: 'BRO', img: 'https://kingsleague-cdn.kama.football/account/production/team/38880310.png', name: 'Bigbro', main: '#a855f7', sub: '#4c1d95', text: '#ffffff' }, 
             'BMR': { id: 'BMR', icon: '💣', name: 'Boomers', main: '#eab308', sub: '#0ea5e9', text: '#ffffff' }, 
             'CIR': { id: 'CIR', icon: '🤡', name: 'Circus', main: '#ffffff', sub: '#7e22ce', text: '#ffffff' }, 
             'DPW': { id: 'DPW', img: 'https://kingsleague-cdn.kama.football/account/production/team/837946638.png', name: 'D-Power', main: '#ef4444', sub: '#f97316', text: '#ffffff' }, 
             'CSR': { id: 'CSR', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/639853075.png', name: 'Caesar', main: '#dc2626', sub: '#7f1d1d', text: '#ffffff' }, 
             'GR7': { id: 'GR7', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/783443232.png', name: 'Gear 7', main: '#71717a', sub: '#eab308', text: '#eab308' }, 
-            // Modificata la riga per STL per usare l'immagine
-            'STL': { id: 'STL', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/691246592.png', name: 'Stallions', main: '#1d4ed8', sub: '#facc15', text: '#ffffff' }, 
+            'STL': { id: 'STL', img: stallionsLogoUrl, name: 'Stallions', main: '#1d4ed8', sub: '#facc15', text: '#ffffff' }, 
             'TRM': { id: 'TRM', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/245320259.png', name: 'TRM FC', main: '#3f3f46', sub: '#facc15', text: '#facc15' }, 
             'UND': { id: 'UND', icon: '🐶', name: 'Underdogs', main: '#22c55e', sub: '#dc2626', text: '#ffffff' }, 
-            'ZEB': { id: 'ZEB', icon: '🦓', name: 'Zebras FC', main: '#e4e4e7', sub: '#000000', text: '#ffffff' }, 
+            'ZEB': { id: 'ZEB', icon: '🦓', name: 'Zebras', main: '#e4e4e7', sub: '#000000', text: '#ffffff' }, 
             'ZTC': { id: 'ZTC', icon: '⚡', name: 'Zeta FC', main: '#1e3a8a', sub: '#ffffff', text: '#ffffff' }  
         };
 
@@ -222,28 +296,46 @@
         let timeLeft = 180; 
         let gameActive = true;
         
-        let cardUsed = false; let mySecretCard = null; 
-        let activeModifier = null; 
-        let doubleGoalTimer = 0; let starPlayerActive = false; let botFrozenUntilKick = false;
-        // Aggiungo lo stato 'FREE_KICK'
-        let freeKickState = null; // null, 'PLAYER', 'BOT' - chi batte la punizione
+        let playerCardUsed = false; let mySecretCard = null; 
+        let botCardUsed = false; let botSecretCard = null;
+        let presidentPenaltyUsed = false;
+        
+        let botFrozenUntilKick = false; let freeKickState = null; 
+
+        let playerDoubleGoalTimer = 0; let botDoubleGoalTimer = 0;
+        let playerStarActive = false; let botStarActive = false;
 
         const secretCards = ['GOL_DOPPIO', 'RIGORE', 'SOSPENSIONE', 'STAR_PLAYER'];
         const cardData = {
-            'GOL_DOPPIO': { icon: '⚽', title: 'GOL DOPPIO', desc: 'Gol x2 per 60s', bgClass: 'bg-gradient-to-br from-red-600 to-orange-500', textColor: 'text-white' },
+            'GOL_DOPPIO': { icon: '⚽', title: 'GOL DOPPIO', desc: 'Tuoi gol x2 (60s)', bgClass: 'bg-gradient-to-br from-red-600 to-orange-500', textColor: 'text-white' },
             'RIGORE': { icon: '🎯', title: 'RIGORE', desc: 'Tiro libero', bgClass: 'bg-gradient-to-br from-zinc-200 to-zinc-400', textColor: 'text-zinc-900' },
-            'SOSPENSIONE': { icon: '🟥', title: 'SOSPENSIONE', desc: 'Bot out per 10s', bgClass: 'bg-gradient-to-br from-red-800 to-red-950', textColor: 'text-white' },
-            'STAR_PLAYER': { icon: '⭐', title: 'STAR PLAYER', desc: 'Prossimo gol x2', bgClass: 'bg-gradient-to-br from-yellow-400 to-yellow-600', textColor: 'text-black' }
+            'SOSPENSIONE': { icon: '🟥', title: 'SOSPENSIONE', desc: 'Capitano Nemico out', bgClass: 'bg-gradient-to-br from-red-800 to-red-950', textColor: 'text-white' },
+            'STAR_PLAYER': { icon: '⭐', title: 'STAR PLAYER', desc: 'Tuo prossimo gol x2', bgClass: 'bg-gradient-to-br from-yellow-400 to-yellow-600', textColor: 'text-black' }
         };
 
         let isFoulPaused = false;
-        const goalWidth = 15; let goalHeight = 150; // Aumentata l'altezza della porta da 120 a 150
-        const cornerSize = 40; // Dimensione dell'area di rimbalzo angolare
+        let goalWidth = 15; let goalHeight = 180; // Porte leggermente più grandi
+        const cornerSize = 40; 
 
-        // Aumentato l'attrito da 0.98 a 0.96 per una palla più gestibile
-        const ball = { x: canvas.width/2, y: canvas.height/2, vx: 0, vy: 0, r: 10, friction: 0.96, color: '#ffffff' };
-        const player = { x: 150, y: canvas.height/2, vx: 0, vy: 0, r: 22, speed: 0.8, maxSpeed: 4.5, friction: 0.85, color: myTeam.main, subColor: myTeam.sub };
-        const bot = { x: canvas.width-150, y: canvas.height/2, vx: 0, vy: 0, r: 22, speed: 0.5, maxSpeed: 3.5, friction: 0.85, color: botTeam.main, subColor: botTeam.sub };
+        // Entità Multiple (Array)
+        let maxPlayers = 1; // Inizia 1v1
+        let players = [];
+        let bots = [];
+        
+        // Palla leggermente più reattiva per facilitare i gol
+        const ball = { x: canvas.width/2, y: canvas.height/2, vx: 0, vy: 0, r: 9, friction: 0.96, color: '#ffffff' };
+
+        // Funzione per creare entità
+        function createEntity(startX, startY, teamInfo, isPlayer) {
+            return {
+                x: startX, y: startY, vx: 0, vy: 0, r: 15,
+                speed: isPlayer ? 0.65 : 0.5, 
+                maxSpeed: isPlayer ? 4.2 : 3.5, 
+                friction: 0.85, 
+                color: teamInfo.main, subColor: teamInfo.sub,
+                isFrozen: false
+            };
+        }
 
         const keys = {};
         window.addEventListener('keydown', e => { keys[e.code] = true; keys[e.key] = true; });
@@ -256,13 +348,9 @@
                 badge.className = 'w-32 h-36 team-badge shadow-lg';
                 badge.style.borderColor = team.main;
                 
-                // Controllo se la squadra ha un'immagine o un'icona
-                let iconHtml = '';
-                if (team.img) {
-                    iconHtml = `<img src="${team.img}" alt="${team.name}" class="team-badge-img">`;
-                } else {
-                    iconHtml = `<div class="team-badge-icon">${team.icon}</div>`;
-                }
+                let iconHtml = team.img 
+                    ? `<img src="${team.img}" alt="${team.name}" class="team-badge-img drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]" onerror="this.outerHTML='<div class=\\'team-badge-icon\\'>${team.icon || '🛡️'}</div>'">` 
+                    : `<div class="team-badge-icon">${team.icon}</div>`;
 
                 badge.innerHTML = `
                     ${iconHtml}
@@ -276,19 +364,27 @@
         function selectTeam(teamId) {
             myTeam = teamsInfo[teamId];
             const availableBots = Object.keys(teamsInfo).filter(id => id !== teamId);
-            const randomBotId = availableBots[Math.floor(Math.random() * availableBots.length)];
-            botTeam = teamsInfo[randomBotId];
+            botTeam = teamsInfo[availableBots[Math.floor(Math.random() * availableBots.length)]];
 
-            player.color = myTeam.main; player.subColor = myTeam.sub;
-            bot.color = botTeam.main; bot.subColor = botTeam.sub;
+            // Inizializza 1v1
+            players = [createEntity(150, canvas.height/2, myTeam, true)];
+            bots = [createEntity(canvas.width-150, canvas.height/2, botTeam, false)];
 
-            document.getElementById('playerNameUI').innerText = `${myTeam.name} (Tu)`;
-            document.getElementById('playerNameUI').style.color = myTeam.main;
-            document.getElementById('scoreLeft').style.textShadow = `0 0 10px rgba(0,0,0,0.8), 0 0 20px ${myTeam.main}`;
+            // Aggiorna UI Scoreboard Unito con Colori Squadra
+            document.getElementById('playerNameUI').innerText = myTeam.name;
+            document.getElementById('botNameUI').innerText = botTeam.name;
             
-            document.getElementById('botNameUI').innerText = `${botTeam.name} (Bot)`;
-            document.getElementById('botNameUI').style.color = botTeam.main;
-            document.getElementById('scoreRight').style.textShadow = `0 0 10px rgba(0,0,0,0.8), 0 0 20px ${botTeam.main}`;
+            document.getElementById('playerScoreCard').style.backgroundColor = myTeam.main;
+            document.getElementById('botScoreCard').style.backgroundColor = botTeam.main;
+
+            // Inserisci Loghi nel tabellone
+            document.getElementById('playerLogoUI').innerHTML = myTeam.img 
+                ? `<img src="${myTeam.img}" class="w-8 h-8 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" onerror="this.innerHTML='${myTeam.icon || '🛡️'}'">` 
+                : myTeam.icon;
+            
+            document.getElementById('botLogoUI').innerHTML = botTeam.img 
+                ? `<img src="${botTeam.img}" class="w-8 h-8 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" onerror="this.innerHTML='${botTeam.icon || '🛡️'}'">` 
+                : botTeam.icon;
 
             document.getElementById('teamSelectionScreen').classList.add('opacity-0');
             setTimeout(() => {
@@ -306,7 +402,11 @@
 
             mySecretCard = secretCards[Math.floor(Math.random() * secretCards.length)];
             const data = cardData[mySecretCard];
+            botSecretCard = secretCards[Math.floor(Math.random() * secretCards.length)];
             
+            let botActivationDelay = Math.floor(Math.random() * (80000 - 20000) + 20000);
+            setTimeout(() => { activateBotCard(); }, botActivationDelay);
+
             const front = element.querySelector('.card-front');
             front.className = `card-front ${data.bgClass} ${data.textColor}`;
             front.innerHTML = `
@@ -324,119 +424,190 @@
                 setTimeout(() => {
                     document.getElementById('cardSelectionScreen').style.display = 'none';
                     gameState = 'PLAYING';
+                    showMessage("1 VS 1", "from-blue-300 to-cyan-500");
                 }, 700);
             }, 3000);
         }
 
-        function showMessage(text, colorClass = 'from-orange-400 to-yellow-400', isLarge = false) {
+        function showMessage(text, colorHexOrClass, isLarge = false) {
             const msgBox = document.getElementById('messageBox');
             msgBox.innerText = text;
-            msgBox.className = `absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${isLarge ? 'text-7xl' : 'text-5xl'} font-black italic text-transparent bg-clip-text bg-gradient-to-r ${colorClass} transition-all duration-300 z-20 pointer-events-none text-center uppercase tracking-tighter drop-shadow-2xl whitespace-nowrap`;
+            if (colorHexOrClass.startsWith('from-')) {
+                msgBox.className = `absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${isLarge ? 'text-7xl' : 'text-5xl'} font-black italic text-transparent bg-clip-text bg-gradient-to-r ${colorHexOrClass} transition-all duration-300 z-20 pointer-events-none text-center uppercase tracking-tighter drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)] whitespace-nowrap`;
+                msgBox.style.webkitTextStroke = "2px rgba(0,0,0,0.5)";
+            } else {
+                msgBox.className = `absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${isLarge ? 'text-7xl' : 'text-5xl'} font-black italic transition-all duration-300 z-20 pointer-events-none text-center uppercase tracking-tighter whitespace-nowrap`;
+                msgBox.style.color = colorHexOrClass;
+                msgBox.style.textShadow = `0px 5px 15px rgba(0,0,0,1), 0px 0px 30px ${colorHexOrClass}`;
+                msgBox.style.webkitTextStroke = "2px black";
+            }
             msgBox.classList.remove('opacity-0', 'scale-150'); msgBox.classList.add('opacity-100', 'scale-100');
             setTimeout(() => {
                 msgBox.classList.remove('opacity-100', 'scale-100'); msgBox.classList.add('opacity-0', 'scale-150');
             }, 2500);
         }
 
-        function updateScoreboard() {
-            document.getElementById('scoreLeft').innerText = scoreLeft;
-            document.getElementById('scoreRight').innerText = scoreRight;
-        }
-
         function resetPositions() {
             ball.x = canvas.width / 2; ball.y = canvas.height / 2; ball.vx = 0; ball.vy = 0;
-            player.x = 150; player.y = canvas.height / 2; player.vx = 0; player.vy = 0;
-            bot.x = canvas.width - 150; bot.y = canvas.height / 2; bot.vx = 0; bot.vy = 0;
+            
+            // Riposiziona tutti i giocatori in modo ordinato
+            for(let i=0; i<players.length; i++) {
+                players[i].vx = 0; players[i].vy = 0;
+                players[i].x = 150 + (i*40);
+                players[i].y = (canvas.height/2) + ((i%2===0?1:-1) * (i*50));
+            }
+            for(let i=0; i<bots.length; i++) {
+                bots[i].vx = 0; bots[i].vy = 0;
+                bots[i].x = canvas.width - 150 - (i*40);
+                bots[i].y = (canvas.height/2) + ((i%2===0?1:-1) * (i*50));
+            }
             botFrozenUntilKick = false;
         }
 
         function scoreGoal(scorer) {
             let points = 1;
-            if (doubleGoalTimer > 0) points = 2;
-            else if (starPlayerActive && scorer === 'PLAYER') {
-                points = 2; starPlayerActive = false; 
-                document.getElementById('starPlayerIndicator').classList.add('hidden');
-            }
-
             if (scorer === 'PLAYER') {
-                scoreLeft += points; showMessage("GOL STALLIONS!" + (points>1 ? " (X2)" : ""), "from-orange-400 to-red-500", true);
+                if (playerDoubleGoalTimer > 0) points = 2;
+                else if (playerStarActive) { points = 2; playerStarActive = false; document.getElementById('starPlayerIndicator').classList.add('hidden'); }
+                scoreLeft += points; 
+                showMessage("GOL " + myTeam.name + "!" + (points>1 ? " (X2)" : ""), myTeam.main, true);
             } else {
-                scoreRight += points; showMessage("GOL ZEBRAS!" + (points>1 ? " (X2)" : ""), "from-blue-400 to-cyan-400", true);
+                if (botDoubleGoalTimer > 0) points = 2;
+                else if (botStarActive) { points = 2; botStarActive = false; document.getElementById('botStarPlayerIndicator').classList.add('hidden'); }
+                scoreRight += points; 
+                showMessage("GOL " + botTeam.name + "!" + (points>1 ? " (X2)" : ""), botTeam.main, true);
             }
 
-            updateScoreboard();
+            document.getElementById('scoreLeft').innerText = scoreLeft;
+            document.getElementById('scoreRight').innerText = scoreRight;
             if (gameState === 'SHOOTOUT') { triggerEndGame(); return; }
             resetPositions();
         }
 
+        // --- GESTIONE CARTE ---
+        
+        function activateBotCard() {
+            if (!gameActive || gameState !== 'PLAYING' || botCardUsed) return;
+            botCardUsed = true;
+            const effect = botSecretCard;
+            if (effect === 'GOL_DOPPIO') {
+                showMessage("🤖 BOT: GOL DOPPIO!", "from-purple-500 to-purple-800");
+                botDoubleGoalTimer = 60; document.getElementById('botDoubleGoalIndicator').classList.remove('hidden');
+            } else if (effect === 'SOSPENSIONE') {
+                showMessage("🤖 BOT: SOSPENSIONE!", "from-red-600 to-red-900");
+                players[0].isFrozen = true; setTimeout(() => { players[0].isFrozen = false; }, 10000);
+            } else if (effect === 'RIGORE') {
+                showMessage("🤖 BOT: RIGORE!", "from-zinc-300 to-zinc-600", true);
+                setupPenalty('BOT');
+            } else if (effect === 'STAR_PLAYER') {
+                showMessage("🤖 BOT: STAR PLAYER!", "from-purple-300 to-purple-600");
+                botStarActive = true; document.getElementById('botStarPlayerIndicator').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('cardBtn').addEventListener('click', () => {
+            if (playerCardUsed || !gameActive || gameState !== 'PLAYING' || !mySecretCard) return;
+            playerCardUsed = true;
+            document.getElementById('cardBtn').classList.add('opacity-40', 'cursor-not-allowed', 'grayscale');
+            document.getElementById('cardBtn').innerHTML = '<span class="relative z-10 flex items-center gap-2">❌ CARTA USATA</span>';
+
+            const effect = mySecretCard;
+            if (effect === 'GOL_DOPPIO') {
+                showMessage("HAI ATTIVATO: GOL DOPPIO!", "from-orange-400 to-red-500");
+                playerDoubleGoalTimer = 60; document.getElementById('playerDoubleGoalIndicator').classList.remove('hidden');
+            } else if (effect === 'SOSPENSIONE') {
+                showMessage("HAI ATTIVATO: SOSPENSIONE!", "from-red-500 to-red-800");
+                bots[0].isFrozen = true; setTimeout(() => { bots[0].isFrozen = false; }, 10000);
+            } else if (effect === 'RIGORE') {
+                showMessage("HAI ATTIVATO: RIGORE!", "from-zinc-100 to-zinc-400", true);
+                setupPenalty('PLAYER');
+            } else if (effect === 'STAR_PLAYER') {
+                showMessage("HAI ATTIVATO: STAR PLAYER!", "from-yellow-300 to-yellow-500");
+                playerStarActive = true; document.getElementById('starPlayerIndicator').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('presidentBtn').addEventListener('click', () => {
+            if (presidentPenaltyUsed || !gameActive || gameState !== 'PLAYING') return;
+            presidentPenaltyUsed = true;
+            document.getElementById('presidentBtn').classList.add('opacity-40', 'cursor-not-allowed', 'grayscale');
+            document.getElementById('presidentBtn').innerHTML = '<span class="relative z-10 flex items-center gap-2">❌ PRESIDENZIALE USATO</span>';
+            showMessage("👑 RIGORE PRESIDENZIALE!", "from-yellow-400 to-amber-600", true);
+            setupPenalty('PLAYER');
+        });
+
+        function setupPenalty(taker) {
+            gameState = 'FREE_KICK';
+            ball.vx = 0; ball.vy = 0; 
+            
+            // Allontana tutti prima di posizionare i battitori
+            [...players, ...bots].forEach(e => { e.x = canvas.width/2; e.y = -100; e.vx = 0; e.vy = 0; });
+
+            if (taker === 'PLAYER') {
+                bots[0].x = canvas.width - goalWidth - bots[0].r; bots[0].y = canvas.height / 2; // Portiere
+                ball.x = canvas.width - 350; ball.y = canvas.height / 2; // Palla
+                players[0].x = ball.x - 100; players[0].y = canvas.height / 2; // Battitore
+                botFrozenUntilKick = true;
+                freeKickState = 'PLAYER';
+            } else {
+                players[0].x = goalWidth + players[0].r; players[0].y = canvas.height / 2; // Portiere
+                ball.x = 350; ball.y = canvas.height / 2; 
+                bots[0].x = ball.x + 100; bots[0].y = canvas.height / 2; 
+                botFrozenUntilKick = false;
+                players[0].isFrozen = true; 
+                freeKickState = 'BOT';
+            }
+        }
+
+        // --- FISICA E IA COMPLETA (FIX ANTI-BLOCCO) ---
+
         function handleCollisions(entity, b) {
             let dx = b.x - entity.x; let dy = b.y - entity.y; let dist = Math.sqrt(dx*dx + dy*dy);
             if (dist < entity.r + b.r) {
-                // Se siamo in uno stato di calcio di punizione e la palla viene toccata, il gioco riprende
-                if (freeKickState) {
-                    freeKickState = null;
-                    gameState = 'PLAYING';
-                    showMessage("SI GIOCA!", "from-green-400 to-blue-500");
+                if (freeKickState || botFrozenUntilKick || (players[0].isFrozen && freeKickState==='BOT')) {
+                    freeKickState = null; botFrozenUntilKick = false; players[0].isFrozen = false; 
+                    gameState = 'PLAYING'; showMessage("SI GIOCA!", "from-green-400 to-blue-500");
                 }
-
-                if (botFrozenUntilKick && entity === player) botFrozenUntilKick = false;
                 let angle = Math.atan2(dy, dx);
                 let speedMag = Math.sqrt(entity.vx*entity.vx + entity.vy*entity.vy);
-                let kickForce = 4 + (speedMag * 1.5); if (kickForce > 12) kickForce = 12;
+                // Tiro più forte per facilitare i gol
+                let kickForce = 4.5 + (speedMag * 1.5); if (kickForce > 13) kickForce = 13;
                 b.vx = Math.cos(angle) * kickForce; b.vy = Math.sin(angle) * kickForce;
+                
+                // NOVITÀ: Aiuta la palla a scollarsi dal muro se viene colpita lì
+                if (b.x < 20) b.vx += 2;
+                if (b.x > canvas.width - 20) b.vx -= 2;
+                if (b.y < 20) b.vy += 2;
+                if (b.y > canvas.height - 20) b.vy -= 2;
+
                 let overlap = (entity.r + b.r) - dist;
                 b.x += Math.cos(angle) * overlap; b.y += Math.sin(angle) * overlap;
             }
         }
 
-        function setupFreeKick(fouler) {
+        function setupFreeKick(foulerType) {
             gameState = 'FREE_KICK';
             ball.vx = 0; ball.vy = 0;
-            player.vx = 0; player.vy = 0;
-            bot.vx = 0; bot.vy = 0;
+            [...players, ...bots].forEach(e => { e.vx = 0; e.vy = 0; });
+            const barrierDist = 150; 
 
-            const foulX = ball.x;
-            const foulY = ball.y;
-            const barrierDist = 100; // Distanza della barriera
-
-            if (fouler === 'BOT') {
+            if (foulerType === 'BOT') {
                 freeKickState = 'PLAYER';
-                // Posiziona il giocatore per battere
-                player.x = foulX - 30;
-                player.y = foulY;
-                // Posiziona il bot (barriera)
-                bot.x = foulX + barrierDist;
-                bot.y = foulY;
-                showMessage("PUNIZIONE STALLIONS!", "from-orange-400 to-red-500");
+                ball.x = canvas.width / 4; ball.y = canvas.height / 2;
+                players[0].x = ball.x - 40; players[0].y = ball.y;
+                bots[0].x = ball.x + barrierDist; bots[0].y = ball.y;
+                showMessage("PUNIZIONE " + myTeam.name.toUpperCase() + "!", myTeam.main);
             } else {
                 freeKickState = 'BOT';
-                // Posiziona il bot per battere
-                bot.x = foulX + 30;
-                bot.y = foulY;
-                // Posiziona il giocatore (barriera)
-                player.x = foulX - barrierDist;
-                player.y = foulY;
-                showMessage("PUNIZIONE ZEBRAS!", "from-blue-400 to-cyan-400");
+                ball.x = canvas.width * 0.75; ball.y = canvas.height / 2;
+                bots[0].x = ball.x + 40; bots[0].y = ball.y;
+                players[0].x = ball.x - barrierDist; players[0].y = ball.y;
+                showMessage("PUNIZIONE " + botTeam.name.toUpperCase() + "!", botTeam.main);
             }
-        }
-
-        function triggerFoul(fouler) {
-            if (isFoulPaused || gameState !== 'PLAYING') return; // Evita falli multipli o durante altre fasi
-            isFoulPaused = true;
-            showMessage("FALLO! 🟨", "from-yellow-300 to-yellow-500");
             
-            // Applica la sospensione temporanea come prima
-            let previousModifier = activeModifier;
-            if (fouler === 'PLAYER') activeModifier = 'GHIACCIO_PLAYER'; else activeModifier = 'SOSPENSIONE_BOT';
-            
-            setTimeout(() => {
-                isFoulPaused = false;
-                if (activeModifier === 'GHIACCIO_PLAYER' || (activeModifier === 'SOSPENSIONE_BOT' && previousModifier !== 'SOSPENSIONE_BOT')) {
-                    activeModifier = previousModifier; 
-                }
-                // Dopo il cartellino, prepara la punizione
-                setupFreeKick(fouler);
-            }, 2500);
+            // Nascondi gli altri giocatori temporaneamente
+            for(let i=1; i<players.length; i++) { players[i].x = 100; players[i].y = 50 * i; }
+            for(let i=1; i<bots.length; i++) { bots[i].x = canvas.width - 100; bots[i].y = 50 * i; }
         }
 
         function handleEntityCollision(p1, p2) {
@@ -447,104 +618,168 @@
                 p2.x += (dx/dist) * (overlap/2); p2.y += (dy/dist) * (overlap/2);
 
                 let relSpeed = Math.sqrt(Math.pow(p1.vx - p2.vx, 2) + Math.pow(p1.vy - p2.vy, 2));
-                if (relSpeed > 6.5) {
+                if (relSpeed > 6.0 && !isFoulPaused && gameState === 'PLAYING') { 
+                    isFoulPaused = true;
+                    showMessage("FALLO! 🟨", "from-yellow-300 to-yellow-500");
                     let p1S = Math.sqrt(p1.vx*p1.vx + p1.vy*p1.vy); let p2S = Math.sqrt(p2.vx*p2.vx + p2.vy*p2.vy);
-                    triggerFoul(p1S > p2S ? 'PLAYER' : 'BOT');
+                    let isPlayer1Mine = players.includes(p1);
+                    let fouler = (p1S > p2S) ? p1 : p2;
+                    let foulerType = players.includes(fouler) ? 'PLAYER' : 'BOT';
+                    
+                    fouler.isFrozen = true;
+                    setTimeout(() => {
+                        isFoulPaused = false;
+                        fouler.isFrozen = false;
+                        setupFreeKick(foulerType);
+                    }, 2500);
                 }
                 let tempVx = p1.vx; let tempVy = p1.vy;
                 p1.vx = p2.vx * 0.8; p1.vy = p2.vy * 0.8; p2.vx = tempVx * 0.8; p2.vy = tempVy * 0.8;
             }
         }
 
+        // Funzione AI intelligente integrata (Sistema API di Flocking e Sterzata Predittiva)
+        function processAI(entity, isAlly) {
+            if (entity.isFrozen || (gameState !== 'PLAYING' && !(isAlly && freeKickState === 'PLAYER') && !(!isAlly && freeKickState === 'BOT'))) return;
+            if (!isAlly && botFrozenUntilKick) return;
+
+            let myTeamArray = isAlly ? players : bots;
+            let allyGoalX = isAlly ? 0 : canvas.width;
+            let enemyGoalX = isAlly ? canvas.width : 0;
+            let goalY = canvas.height / 2;
+
+            // 1. TATTICA: Identifica il ruolo in base alla distanza dalla palla
+            let distances = myTeamArray.map(m => ({ e: m, d: Math.sqrt(Math.pow(ball.x - m.x, 2) + Math.pow(ball.y - m.y, 2)) }));
+            distances.sort((a,b) => a.d - b.d);
+            let myRank = distances.findIndex(m => m.e === entity); // 0 = Attaccante, 1 = Difensore, 2 = Ala
+
+            let targetX = entity.x; 
+            let targetY = entity.y; 
+            let speedMult = 1.0;
+
+            if (myRank === 0) {
+                // ATTACCANTE: Punta la palla
+                targetX = ball.x; targetY = ball.y;
+                // Se è molto vicino, prova a mettersi dietro la palla per calciare verso la porta
+                if (distances[0].d < 40) {
+                    targetX += (isAlly ? -15 : 15);
+                }
+            } else if (myRank === 1) {
+                // DIFENSORE: Si posiziona tra la palla e la propria porta
+                targetX = ball.x + (allyGoalX - ball.x) * 0.4;
+                targetY = ball.y + (goalY - ball.y) * 0.4;
+                speedMult = 0.8;
+            } else {
+                // ALA/SUPPORTO: Offre una linea di passaggio laterale
+                targetX = canvas.width / 2 + (isAlly ? -100 : 100);
+                targetY = (ball.y < canvas.height / 2) ? canvas.height - 150 : 150;
+                speedMult = 0.8;
+            }
+
+            // 2. FORZA DI INSEGUIMENTO (Cerca l'obiettivo assegnato)
+            let desiredX = targetX - entity.x;
+            let desiredY = targetY - entity.y;
+            let dMag = Math.sqrt(desiredX*desiredX + desiredY*desiredY);
+            if (dMag > 0) {
+                desiredX = (desiredX / dMag) * entity.maxSpeed * speedMult;
+                desiredY = (desiredY / dMag) * entity.maxSpeed * speedMult;
+            }
+
+            // 3. FORZA DI SEPARAZIONE (Evita di attaccarsi/ammucchiarsi agli altri giocatori)
+            let sepX = 0, sepY = 0, neighborCount = 0;
+            const avoidRadius = 50; // Raggio personale di distanziamento
+            let allEntities = [...players, ...bots];
+            for (let other of allEntities) {
+                if (other === entity) continue;
+                let dx = entity.x - other.x;
+                let dy = entity.y - other.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist > 0 && dist < avoidRadius) {
+                    // Forza repulsiva inversamente proporzionale alla distanza
+                    let pushStrength = (avoidRadius - dist) / avoidRadius;
+                    sepX += (dx / dist) * pushStrength;
+                    sepY += (dy / dist) * pushStrength;
+                    neighborCount++;
+                }
+            }
+            if (neighborCount > 0) {
+                sepX = (sepX / neighborCount) * entity.maxSpeed * 2.0;
+                sepY = (sepY / neighborCount) * entity.maxSpeed * 2.0;
+            }
+
+            // 4. PREVENZIONE MURI PREDITTIVA (Curva prima di sbattere)
+            let wallX = 0, wallY = 0;
+            const wallMargin = 40; 
+            
+            // NOVITÀ: Se la palla è contro il muro, l'IA si fionda a prenderla ignorando la prevenzione
+            let ignoreWalls = (ball.x < 30 || ball.x > canvas.width - 30 || ball.y < 30 || ball.y > canvas.height - 30);
+
+            if (!ignoreWalls) {
+                if (entity.x < wallMargin) wallX = entity.maxSpeed * 1.5;
+                else if (entity.x > canvas.width - wallMargin) wallX = -entity.maxSpeed * 1.5;
+                
+                if (entity.y < wallMargin) wallY = entity.maxSpeed * 1.5;
+                else if (entity.y > canvas.height - wallMargin) wallY = -entity.maxSpeed * 1.5;
+            }
+
+            // 5. APPLICAZIONE FORZE COMBINATE (Calcolo vettoriale)
+            let steerX = (desiredX - entity.vx) * 0.15 + sepX * 0.25 + wallX * 0.3;
+            let steerY = (desiredY - entity.vy) * 0.15 + sepY * 0.25 + wallY * 0.3;
+
+            entity.vx += steerX;
+            entity.vy += steerY;
+
+            // 6. LIMITATORE DI VELOCITÀ DINAMICA
+            let eMag = Math.sqrt(entity.vx*entity.vx + entity.vy*entity.vy);
+            if (eMag > entity.maxSpeed) { 
+                entity.vx = (entity.vx/eMag)*entity.maxSpeed; 
+                entity.vy = (entity.vy/eMag)*entity.maxSpeed; 
+            }
+        }
+
         function updatePhysics() {
-            // Durante il calcio di punizione, solo il battitore può muoversi
             if (!gameActive || (gameState !== 'PLAYING' && gameState !== 'FREE_KICK')) return;
 
-            let pMax = player.maxSpeed;
-            // Il giocatore può muoversi se è in gioco O se è il suo turno per la punizione
-            if (activeModifier !== 'GHIACCIO_PLAYER' && (gameState === 'PLAYING' || freeKickState === 'PLAYER')) {
-                if (keys['ArrowUp'] || keys['KeyW']) player.vy -= player.speed;
-                if (keys['ArrowDown'] || keys['KeyS']) player.vy += player.speed;
-                if (keys['ArrowLeft'] || keys['KeyA']) player.vx -= player.speed;
-                if (keys['ArrowRight'] || keys['KeyD']) player.vx += player.speed;
+            // Movimento Player 0 (Utente)
+            if (!players[0].isFrozen && (gameState === 'PLAYING' || freeKickState === 'PLAYER')) {
+                if (keys['ArrowUp'] || keys['KeyW']) players[0].vy -= players[0].speed;
+                if (keys['ArrowDown'] || keys['KeyS']) players[0].vy += players[0].speed;
+                if (keys['ArrowLeft'] || keys['KeyA']) players[0].vx -= players[0].speed;
+                if (keys['ArrowRight'] || keys['KeyD']) players[0].vx += players[0].speed;
             }
-            let pMag = Math.sqrt(player.vx*player.vx + player.vy*player.vy);
-            if (pMag > pMax) { player.vx = (player.vx/pMag)*pMax; player.vy = (player.vy/pMag)*pMax; }
-            player.vx *= player.friction; player.vy *= player.friction;
-            player.x += player.vx; player.y += player.vy;
+            let pMag = Math.sqrt(players[0].vx*players[0].vx + players[0].vy*players[0].vy);
+            if (pMag > players[0].maxSpeed) { players[0].vx = (players[0].vx/pMag)*players[0].maxSpeed; players[0].vy = (players[0].vy/pMag)*players[0].maxSpeed; }
 
-            // --- IA BOT ANTI-INCASTRO MIGLIORATA ---
-            // Il bot può muoversi se è in gioco O se è il suo turno per la punizione
-            if (activeModifier !== 'SOSPENSIONE_BOT' && !botFrozenUntilKick && (gameState === 'PLAYING' || freeKickState === 'BOT')) {
-                let dx = ball.x - bot.x; let dy = ball.y - bot.y; let distToBall = Math.sqrt(dx*dx + dy*dy);
+            let allEntities = [...players, ...bots];
+            
+            for(let i=1; i<players.length; i++) processAI(players[i], true);
+            for(let i=0; i<bots.length; i++) processAI(bots[i], false);
 
-                if (ball.x > canvas.width / 2 || distToBall < 150) {
-                    bot.vx += (dx / distToBall) * bot.speed; bot.vy += (dy / distToBall) * bot.speed;
-                } else {
-                    let toDefX = (canvas.width - 50) - bot.x; let toDefY = (canvas.height / 2) - bot.y;
-                    let distToDef = Math.sqrt(toDefX*toDefX + toDefY*toDefY);
-                    if (distToDef > 10) { bot.vx += (toDefX / distToDef) * bot.speed * 0.8; bot.vy += (toDefY / distToDef) * bot.speed * 0.8; }
-                }
-
-                // Logica di scivolamento sui muri per evitare incastri
-                if (bot.y <= bot.r + 5) { bot.vy = Math.max(0, bot.vy); bot.vx += (ball.x > bot.x ? 1 : -1) * bot.speed * 2; }
-                if (bot.y >= canvas.height - bot.r - 5) { bot.vy = Math.min(0, bot.vy); bot.vx += (ball.x > bot.x ? 1 : -1) * bot.speed * 2; }
-                if (bot.x <= bot.r + 5) { bot.vx = Math.max(0, bot.vx); bot.vy += (ball.y > bot.y ? 1 : -1) * bot.speed * 2; }
-                if (bot.x >= canvas.width - bot.r - 5) { bot.vx = Math.min(0, bot.vx); bot.vy += (ball.y > bot.y ? 1 : -1) * bot.speed * 2; }
-
-                // Repulsione estrema dagli angoli
-                const cDist = cornerSize + 20;
-                if (bot.x < cDist && bot.y < cDist) { bot.vx += 3; bot.vy += 3; }
-                if (bot.x > canvas.width - cDist && bot.y < cDist) { bot.vx -= 3; bot.vy += 3; }
-                if (bot.x < cDist && bot.y > canvas.height - cDist) { bot.vx += 3; bot.vy -= 3; }
-                if (bot.x > canvas.width - cDist && bot.y > canvas.height - cDist) { bot.vx -= 3; bot.vy -= 3; }
-
-                let bMag = Math.sqrt(bot.vx*bot.vx + bot.vy*bot.vy);
-                if (bMag > bot.maxSpeed) { bot.vx = (bot.vx/bMag)*bot.maxSpeed; bot.vy = (bot.vy/bMag)*bot.maxSpeed; }
-                bot.vx *= bot.friction; bot.vy *= bot.friction;
-                bot.x += bot.vx; bot.y += bot.vy;
+            for(let e of allEntities) {
+                e.vx *= e.friction; e.vy *= e.friction;
+                e.x += e.vx; e.y += e.vy;
+                
+                // NOVITÀ: Limite fisico ridotto a 5px per permettere ai giocatori di "schiacciarsi" al muro e scavare la palla
+                e.x = Math.max(5, Math.min(canvas.width - 5, e.x));
+                e.y = Math.max(5, Math.min(canvas.height - 5, e.y));
             }
 
-            // --- FISICA PALLA E RIMBALZI ANGOLARI ---
+            for(let i=0; i<allEntities.length; i++) {
+                for(let j=i+1; j<allEntities.length; j++) handleEntityCollision(allEntities[i], allEntities[j]);
+                if (!allEntities[i].isFrozen) handleCollisions(allEntities[i], ball);
+            }
+
             ball.vx *= ball.friction; ball.vy *= ball.friction;
             ball.x += ball.vx; ball.y += ball.vy;
 
-            if (activeModifier !== 'GHIACCIO_PLAYER') handleCollisions(player, ball);
-            if (activeModifier !== 'SOSPENSIONE_BOT') handleCollisions(bot, ball);
-            handleEntityCollision(player, bot);
-
-            player.x = Math.max(player.r, Math.min(canvas.width - player.r, player.x));
-            player.y = Math.max(player.r, Math.min(canvas.height - player.r, player.y));
-            bot.x = Math.max(bot.r, Math.min(canvas.width - bot.r, bot.x));
-            bot.y = Math.max(bot.r, Math.min(canvas.height - bot.r, bot.y));
-
-            // Rimbalzi sui muri normali (Sopra e Sotto)
             if (ball.y - ball.r < 0) { ball.y = ball.r; ball.vy *= -0.8; }
             if (ball.y + ball.r > canvas.height) { ball.y = canvas.height - ball.r; ball.vy *= -0.8; }
 
-            // BUMPER ANGOLARI (Rimbalzi diagonali perfetti negli angoli)
-            // Alto-Sinistra
-            if (ball.x + ball.y < cornerSize + ball.r) {
-                let temp = ball.vx; ball.vx = Math.abs(ball.vy) * 0.9; ball.vy = Math.abs(temp) * 0.9;
-                ball.x += 2; ball.y += 2;
-            }
-            // Alto-Destra
-            else if ((canvas.width - ball.x) + ball.y < cornerSize + ball.r) {
-                let temp = ball.vx; ball.vx = -Math.abs(ball.vy) * 0.9; ball.vy = Math.abs(temp) * 0.9;
-                ball.x -= 2; ball.y += 2;
-            }
-            // Basso-Sinistra
-            else if (ball.x + (canvas.height - ball.y) < cornerSize + ball.r) {
-                let temp = ball.vx; ball.vx = Math.abs(ball.vy) * 0.9; ball.vy = -Math.abs(temp) * 0.9;
-                ball.x += 2; ball.y -= 2;
-            }
-            // Basso-Destra
-            else if ((canvas.width - ball.x) + (canvas.height - ball.y) < cornerSize + ball.r) {
-                let temp = ball.vx; ball.vx = -Math.abs(ball.vy) * 0.9; ball.vy = -Math.abs(temp) * 0.9;
-                ball.x -= 2; ball.y -= 2;
-            }
+            if (ball.x + ball.y < cornerSize + ball.r) { let t=ball.vx; ball.vx=Math.abs(ball.vy)*0.9; ball.vy=Math.abs(t)*0.9; ball.x+=2; ball.y+=2; } 
+            else if ((canvas.width - ball.x) + ball.y < cornerSize + ball.r) { let t=ball.vx; ball.vx=-Math.abs(ball.vy)*0.9; ball.vy=Math.abs(t)*0.9; ball.x-=2; ball.y+=2; } 
+            else if (ball.x + (canvas.height - ball.y) < cornerSize + ball.r) { let t=ball.vx; ball.vx=Math.abs(ball.vy)*0.9; ball.vy=-Math.abs(t)*0.9; ball.x+=2; ball.y-=2; } 
+            else if ((canvas.width - ball.x) + (canvas.height - ball.y) < cornerSize + ball.r) { let t=ball.vx; ball.vx=-Math.abs(ball.vy)*0.9; ball.vy=-Math.abs(t)*0.9; ball.x-=2; ball.y-=2; }
 
-            // Muri X e Goal
             let goalTop = (canvas.height / 2) - (goalHeight / 2);
             let goalBottom = (canvas.height / 2) + (goalHeight / 2);
 
@@ -558,53 +793,62 @@
             }
         }
 
-        function drawEntity(entity, isPlayer=false) {
-            if (!isPlayer && activeModifier === 'SOSPENSIONE_BOT') ctx.globalAlpha = 0.3;
+        // --- RENDERIZZAZIONE ---
+
+        function drawEntity(entity, isPlayer=false, isMainUser=false) {
+            if (entity.isFrozen) ctx.globalAlpha = 0.4;
+            
             ctx.beginPath(); ctx.arc(entity.x, entity.y, entity.r, 0, Math.PI * 2);
             ctx.fillStyle = entity.color; ctx.fill();
-            ctx.lineWidth = 4; ctx.strokeStyle = entity.subColor; ctx.stroke();
-            ctx.beginPath(); ctx.arc(entity.x, entity.y, entity.r - 6, 0, Math.PI * 2);
-            ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.stroke();
+            ctx.lineWidth = 3; ctx.strokeStyle = entity.subColor; ctx.stroke();
+            
+            ctx.beginPath(); ctx.arc(entity.x, entity.y, entity.r - 4, 0, Math.PI * 2);
+            ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.stroke();
             ctx.globalAlpha = 1.0;
             
-            if (isPlayer && activeModifier === 'GHIACCIO_PLAYER') {
+            if (entity.isFrozen) {
                 ctx.beginPath(); ctx.arc(entity.x, entity.y, entity.r + 4, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(234, 179, 8, 0.8)'; ctx.fillStyle = 'rgba(234, 179, 8, 0.3)';
-                ctx.lineWidth = 4; ctx.fill(); ctx.stroke();
+                ctx.strokeStyle = 'rgba(200, 200, 200, 0.8)'; ctx.fillStyle = 'rgba(200, 200, 200, 0.3)';
+                ctx.lineWidth = 3; ctx.fill(); ctx.stroke();
             }
-            if (isPlayer && starPlayerActive) {
-                ctx.font = "16px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                ctx.fillText("⭐", entity.x, entity.y - entity.r - 10);
+
+            if (isMainUser) {
+                ctx.fillStyle = (Date.now() % 500 < 250) ? "#ffffff" : "#facc15";
+                ctx.beginPath(); ctx.moveTo(entity.x, entity.y - entity.r - 8); ctx.lineTo(entity.x - 6, entity.y - entity.r - 18); ctx.lineTo(entity.x + 6, entity.y - entity.r - 18); ctx.fill();
+            }
+            
+            let hasStar = (isPlayer && playerStarActive && isMainUser) || (!isPlayer && botStarActive && entity === bots[0]);
+            if (hasStar) {
+                ctx.font = "14px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.fillText("⭐", entity.x, entity.y - entity.r - (isMainUser? 25 : 8));
             }
         }
 
         function drawField() {
             ctx.fillStyle = '#0f0f0f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Disegna Bumper Angolari (Linee gialle di sicurezza)
-            ctx.strokeStyle = '#eab308'; // Giallo hazard
-            ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(cornerSize, 0); ctx.lineTo(0, cornerSize); ctx.stroke(); // Top-Left
-            ctx.beginPath(); ctx.moveTo(canvas.width - cornerSize, 0); ctx.lineTo(canvas.width, cornerSize); ctx.stroke(); // Top-Right
-            ctx.beginPath(); ctx.moveTo(0, canvas.height - cornerSize); ctx.lineTo(cornerSize, canvas.height); ctx.stroke(); // Bottom-Left
-            ctx.beginPath(); ctx.moveTo(canvas.width, canvas.height - cornerSize); ctx.lineTo(canvas.width - cornerSize, canvas.height); ctx.stroke(); // Bottom-Right
+            ctx.strokeStyle = '#eab308'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(cornerSize, 0); ctx.lineTo(0, cornerSize); ctx.stroke(); 
+            ctx.beginPath(); ctx.moveTo(canvas.width - cornerSize, 0); ctx.lineTo(canvas.width, cornerSize); ctx.stroke(); 
+            ctx.beginPath(); ctx.moveTo(0, canvas.height - cornerSize); ctx.lineTo(cornerSize, canvas.height); ctx.stroke(); 
+            ctx.beginPath(); ctx.moveTo(canvas.width, canvas.height - cornerSize); ctx.lineTo(canvas.width - cornerSize, canvas.height); ctx.stroke(); 
 
             ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.font = "900 65px 'Segoe UI', Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.font = "900 75px 'Segoe UI', Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
             ctx.fillStyle = "rgba(255, 255, 255, 0.04)"; ctx.fillText("KINGS LEAGUE", 0, -20);
-            ctx.font = "800 22px 'Segoe UI', Arial, sans-serif"; ctx.fillText("I T A L Y", 0, 25);
+            ctx.font = "800 25px 'Segoe UI', Arial, sans-serif"; ctx.fillText("I T A L Y", 0, 30);
             ctx.restore();
 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'; ctx.lineWidth = 3;
             ctx.beginPath(); ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height); ctx.stroke();
-            ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 60, 0, Math.PI * 2); ctx.stroke();
-            ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fill();
+            ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 80, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 5, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fill();
 
-            const penaltySpotDist = 120;
-            ctx.beginPath(); ctx.arc(penaltySpotDist, canvas.height/2, 3, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(canvas.width - penaltySpotDist, canvas.height/2, 3, 0, Math.PI*2); ctx.fill();
+            const penaltySpotDist = 150;
+            ctx.beginPath(); ctx.arc(penaltySpotDist, canvas.height/2, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(canvas.width - penaltySpotDist, canvas.height/2, 4, 0, Math.PI*2); ctx.fill();
 
-            const areaWidth = 100; const areaHeight = 220;
+            const areaWidth = 120; const areaHeight = 260;
             ctx.strokeRect(0, (canvas.height/2) - (areaHeight/2), areaWidth, areaHeight);
             ctx.strokeRect(canvas.width - areaWidth, (canvas.height/2) - (areaHeight/2), areaWidth, areaHeight);
 
@@ -619,11 +863,14 @@
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawField();
-            drawEntity(bot, false); drawEntity(player, true);
+            
+            for(let i=0; i<bots.length; i++) drawEntity(bots[i], false);
+            for(let i=0; i<players.length; i++) drawEntity(players[i], true, i===0);
 
             ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
             ctx.fillStyle = ball.color;
-            if (doubleGoalTimer > 0 || starPlayerActive) { ctx.shadowBlur = 15; ctx.shadowColor = '#ef4444'; }
+            if (playerDoubleGoalTimer > 0 || playerStarActive) { ctx.shadowBlur = 15; ctx.shadowColor = '#ef4444'; }
+            if (botDoubleGoalTimer > 0 || botStarActive) { ctx.shadowBlur = 15; ctx.shadowColor = '#a855f7'; }
             ctx.fill(); ctx.shadowBlur = 0; 
             
             ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
@@ -634,34 +881,6 @@
             updatePhysics(); render();
             if(gameActive) requestAnimationFrame(gameLoop);
         }
-
-        document.getElementById('cardBtn').addEventListener('click', () => {
-            if (cardUsed || !gameActive || gameState !== 'PLAYING' || !mySecretCard) return;
-            cardUsed = true;
-            const btn = document.getElementById('cardBtn');
-            btn.classList.add('opacity-40', 'cursor-not-allowed', 'grayscale');
-            btn.innerHTML = '<span class="relative z-10 flex items-center gap-2">❌ CARTA USATA</span>';
-
-            const effect = mySecretCard;
-            if (effect === 'GOL_DOPPIO') {
-                showMessage("GOL DOPPIO X 60s!", "from-red-500 to-orange-500", true);
-                doubleGoalTimer = 60; document.getElementById('doubleGoalIndicator').classList.remove('hidden');
-            } else if (effect === 'SOSPENSIONE') {
-                showMessage("SOSPENSIONE (10s)!", "from-red-700 to-red-900");
-                activeModifier = 'SOSPENSIONE_BOT';
-                setTimeout(() => { if (activeModifier === 'SOSPENSIONE_BOT') activeModifier = null; }, 10000);
-            } else if (effect === 'RIGORE') {
-                showMessage("CALCIO DI RIGORE!", "from-zinc-100 to-zinc-400", true);
-                player.vx = 0; player.vy = 0; bot.vx = 0; bot.vy = 0; ball.vx = 0; ball.vy = 0;
-                player.x = canvas.width / 2 - 50; player.y = canvas.height / 2;
-                ball.x = canvas.width - 120; ball.y = canvas.height / 2;
-                bot.x = canvas.width - goalWidth - bot.r; bot.y = canvas.height / 2;
-                botFrozenUntilKick = true;
-            } else if (effect === 'STAR_PLAYER') {
-                showMessage("⭐ STAR PLAYER!", "from-yellow-300 to-yellow-500");
-                starPlayerActive = true; document.getElementById('starPlayerIndicator').classList.remove('hidden');
-            }
-        });
 
         function triggerEndGame() {
             gameActive = false; if(typeof timerInterval !== 'undefined') clearInterval(timerInterval);
@@ -674,12 +893,29 @@
         }
 
         const timerInterval = setInterval(() => {
-            // Il timer si ferma durante il calcio di punizione
             if(!gameActive || gameState !== 'PLAYING') return;
             timeLeft--;
-            if (doubleGoalTimer > 0) {
-                doubleGoalTimer--; document.getElementById('doubleGoalTimerUI').innerText = doubleGoalTimer;
-                if (doubleGoalTimer === 0) document.getElementById('doubleGoalIndicator').classList.add('hidden');
+            
+            if (timeLeft === 170 && maxPlayers < 2) {
+                maxPlayers = 2;
+                players.push(createEntity(100, canvas.height/3, myTeam, true));
+                bots.push(createEntity(canvas.width-100, canvas.height/3, botTeam, false));
+                showMessage("2 VS 2!", "from-blue-300 to-cyan-500");
+            }
+            if (timeLeft === 160 && maxPlayers < 3) {
+                maxPlayers = 3;
+                players.push(createEntity(100, canvas.height*0.66, myTeam, true));
+                bots.push(createEntity(canvas.width-100, canvas.height*0.66, botTeam, false));
+                showMessage("3 VS 3!", "from-blue-300 to-cyan-500");
+            }
+
+            if (playerDoubleGoalTimer > 0) {
+                playerDoubleGoalTimer--; document.getElementById('playerDoubleGoalTimerUI').innerText = playerDoubleGoalTimer;
+                if (playerDoubleGoalTimer === 0) document.getElementById('playerDoubleGoalIndicator').classList.add('hidden');
+            }
+            if (botDoubleGoalTimer > 0) {
+                botDoubleGoalTimer--; document.getElementById('botDoubleGoalTimerUI').innerText = botDoubleGoalTimer;
+                if (botDoubleGoalTimer === 0) document.getElementById('botDoubleGoalIndicator').classList.add('hidden');
             }
 
             let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
@@ -687,10 +923,16 @@
             const timerEl = document.getElementById('timer'); timerEl.innerText = `${m}:${s}`;
 
             if (timeLeft === 60) {
-                showMessage("🎲 DADO! PORTE GIGANTI!", "from-orange-500 to-red-600");
-                goalHeight = 250; // Porte ancora più grandi per il dado
-                ball.r = 14; timerEl.classList.add('text-orange-400');
+                const diceEvents = ['PORTE GIGANTI', '1 VS 1', 'PALLA INFUOCATA'];
+                const event = diceEvents[Math.floor(Math.random() * diceEvents.length)];
+                showMessage("🎲 DADO: " + event, "from-orange-500 to-red-600");
+                timerEl.classList.add('text-orange-400');
+                
+                if (event === 'PORTE GIGANTI') { goalHeight = 280; } 
+                else if (event === '1 VS 1') { players = [players[0]]; bots = [bots[0]]; maxPlayers = 1; } 
+                else if (event === 'PALLA INFUOCATA') { ball.friction = 0.99; ball.color = '#ef4444'; }
             }
+            
             if(timeLeft <= 10 && timeLeft > 0) timerEl.classList.add('text-red-500', 'animate-pulse');
             if(timeLeft <= 0) {
                 if (scoreLeft === scoreRight) {
