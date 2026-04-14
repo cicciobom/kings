@@ -124,7 +124,7 @@
         <p class="text-zinc-400 text-xl font-medium">L'arena richiede la modalità orizzontale per funzionare correttamente.</p>
     </div>
 
-    <!-- Sfondo Canvas Menu -->
+    <!-- Sfondo Canvas -->
     <canvas id="bgCanvas" class="absolute inset-0 w-full h-full z-0 opacity-40 pointer-events-none" style="border: none; box-shadow: none; max-width: none; max-height: none; object-fit: fill;"></canvas>
 
     <!-- MENU INIZIALE -->
@@ -153,19 +153,19 @@
     <!-- Scoreboard -->
     <div class="absolute top-1 md:top-4 w-full flex justify-center items-start z-40 pointer-events-none px-2 scale-[0.45] sm:scale-[0.6] md:scale-[0.80] lg:scale-[0.9] origin-top">
         <div class="flex items-start justify-center gap-2 md:gap-4">
+            
             <!-- LED Esterni TU -->
             <div class="flex flex-col gap-2 mt-3 skew-left items-end min-w-[30px]">
-                <div id="playerPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 flex items-center justify-center overflow-hidden opacity-0">
+                <div id="playerPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 flex items-center justify-center overflow-hidden origin-right opacity-30">
                     <span class="unskew-left text-[9px] md:text-xs font-black text-black whitespace-nowrap opacity-0 transition-opacity duration-300 leading-none"></span>
                 </div>
-                <div id="playerCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500 flex items-center justify-center overflow-hidden opacity-0">
+                <div id="playerCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500 flex items-center justify-center overflow-hidden origin-right opacity-30">
                     <span class="unskew-left text-[9px] md:text-xs font-black text-black whitespace-nowrap opacity-0 transition-opacity duration-300 leading-none"></span>
                 </div>
             </div>
 
             <!-- Blocco Centrale -->
             <div class="flex flex-col items-center filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
-                <!-- Riga Alta -->
                 <div class="flex items-center h-12 md:h-16 relative">
                     <div id="playerScoreCard" class="skew-left bg-zinc-900 border-b-4 border-l-4 transition-colors duration-500 w-40 md:w-80 h-full flex items-center z-10" style="margin-right: -10px;">
                         <div class="unskew-left flex items-center justify-between w-full px-2 md:px-6">
@@ -197,18 +197,19 @@
 
             <!-- LED Esterni BOT -->
             <div class="flex flex-col gap-2 mt-3 skew-right items-start min-w-[30px]">
-                <div id="botPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 flex items-center justify-center overflow-hidden opacity-0">
+                <div id="botPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 opacity-30 flex items-center justify-center overflow-hidden origin-left opacity-30">
                     <span class="unskew-right text-[9px] md:text-xs font-black text-black whitespace-nowrap opacity-0 transition-opacity duration-300 leading-none"></span>
                 </div>
-                <div id="botCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500 flex items-center justify-center overflow-hidden opacity-0">
+                <div id="botCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500 flex items-center justify-center overflow-hidden origin-left opacity-30">
                     <span class="unskew-right text-[9px] md:text-xs font-black text-black whitespace-nowrap opacity-0 transition-opacity duration-300 leading-none"></span>
                 </div>
             </div>
+
         </div>
     </div>
 
-    <!-- Alert Messaggi -->
-    <div id="messageBox" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none text-center w-full px-4"></div>
+    <!-- Alert Messaggi In-Game -->
+    <div id="messageBox" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none text-center w-full px-4"></div>
 
     <!-- Campo da Gioco -->
     <div id="canvasContainer" class="w-full flex-1 flex justify-center items-center p-2 min-h-0 mt-8 md:mt-16 relative z-10">
@@ -263,7 +264,7 @@
         </div>
     </div>
 
-    <!-- Fine Partita (Ridisegnata) -->
+    <!-- Fine Partita -->
     <div id="gameOverScreen" class="absolute inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-all duration-1000 px-4 text-center overflow-hidden">
         <div id="gameOverBg" class="absolute inset-0 opacity-20 bg-gradient-to-t from-transparent to-transparent"></div>
         <div id="gameOverContent" class="relative z-10 flex flex-col items-center transform scale-90 transition-transform duration-1000">
@@ -354,6 +355,8 @@
         let playerMuroTimer = 0, botMuroTimer = 0;
         let playerSpeedTimer = 0, botSpeedTimer = 0;
         let playerMagnetTimer = 0, botMagnetTimer = 0;
+        let playerSospensioneTimer = 0, botSospensioneTimer = 0;
+        let playerGhiaccioTimer = 0, botGhiaccioTimer = 0;
         let isFoulPaused = false;
         let globalMultiplier = 1; let isZeroGravity = false; 
         let goalWidth = 15, cornerSize = 40, maxPlayers = 1; 
@@ -510,11 +513,36 @@
         }
 
         function showIndicator(elementId, text) {
-            const el = document.getElementById(elementId); const span = el.querySelector('span');
-            el.classList.remove('w-2', 'md:w-3', 'opacity-0'); el.classList.add('w-auto', 'px-2', 'md:px-3', 'opacity-100');
-            span.innerText = text; span.classList.remove('opacity-0'); span.classList.add('opacity-100');
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const span = el.querySelector('span');
+            if (!span) return;
+            
+            el.style.display = '';
+            el.classList.remove('opacity-0', 'w-0', 'w-2', 'md:w-3');
+            el.classList.add('w-auto', 'px-2', 'md:px-3', 'opacity-100');
+            span.innerText = text; 
+            span.classList.remove('opacity-0'); 
+            span.classList.add('opacity-100');
         }
-        function hideIndicator(elementId) { document.getElementById(elementId).classList.add('opacity-0'); }
+
+        function hideIndicator(elementId) { 
+            const el = document.getElementById(elementId); 
+            if (el) {
+                el.classList.remove('w-auto', 'px-2', 'md:px-3', 'w-2', 'md:w-3', 'opacity-100');
+                el.classList.add('w-0', 'opacity-0', 'px-0');
+                const span = el.querySelector('span');
+                if (span) {
+                    span.classList.add('opacity-0');
+                    span.classList.remove('opacity-100');
+                }
+                setTimeout(() => {
+                    if (el.classList.contains('opacity-0')) {
+                        el.style.display = 'none';
+                    }
+                }, 500);
+            }
+        }
 
         // --- KEYBOARD LISTENERS ---
         const keys = {};
@@ -656,17 +684,23 @@
         function triggerShake(intensity = 15) { if(enableShake) shakeTime = intensity; }
 
         function showMessage(text, colorHexOrClass, isLarge = false) {
-            const msgBox = document.getElementById('messageBox'); msgBox.innerHTML = `<span class="block animate-bounce">${text}</span>`;
+            const msgBox = document.getElementById('messageBox'); 
+            if (!msgBox) return;
+            
+            msgBox.innerHTML = `<span class="block animate-bounce">${text}</span>`;
             let sizeClass = isLarge ? 'text-3xl sm:text-5xl md:text-[7rem]' : 'text-2xl sm:text-4xl md:text-6xl';
             msgBox.className = `font-black italic transition-all duration-300 pointer-events-none text-center uppercase tracking-tighter whitespace-nowrap ${sizeClass} absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full px-4 z-[100]`;
-            if (colorHexOrClass.startsWith('from-')) {
+            
+            if (colorHexOrClass && colorHexOrClass.startsWith('from-')) {
                 msgBox.classList.add('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', ...colorHexOrClass.split(' '));
                 msgBox.style.webkitTextStroke = window.innerWidth > 768 ? "3px rgba(0,0,0,0.9)" : "1.5px rgba(0,0,0,0.9)"; msgBox.style.filter = "drop-shadow(0 10px 15px rgba(0,0,0,1))"; msgBox.style.color = "";
-            } else {
+            } else if (colorHexOrClass) {
                 msgBox.style.color = colorHexOrClass; msgBox.style.textShadow = `0px 5px 20px rgba(0,0,0,1), 0px 0px 30px ${colorHexOrClass}`; msgBox.style.webkitTextStroke = window.innerWidth > 768 ? "4px black" : "2px black";
             }
+            
             msgBox.classList.remove('hidden', 'opacity-0', 'scale-150'); msgBox.classList.add('opacity-100', 'scale-100');
-            setTimeout(() => { msgBox.classList.remove('opacity-100', 'scale-100'); msgBox.classList.add('opacity-0', 'scale-150'); }, 2500); setTimeout(() => { msgBox.classList.add('hidden'); }, 2800);
+            setTimeout(() => { msgBox.classList.remove('opacity-100', 'scale-100'); msgBox.classList.add('opacity-0', 'scale-150'); }, 2500); 
+            setTimeout(() => { msgBox.classList.add('hidden'); }, 2800);
         }
 
         function resetPositions() {
@@ -717,14 +751,14 @@
             playSound('magic'); botCardUsed = true; const effect = botSecretCard; 
             showIndicator('botCardLine', cardData[effect].title);
             if (effect === 'GOL_DOPPIO') { showMessage("🤖 BOT: GOL DOPPIO!", "from-purple-500 via-purple-700 to-indigo-800"); botDoubleGoalTimer = 60; } 
-            else if (effect === 'SOSPENSIONE') { showMessage("🤖 BOT: SOSPENSIONE!", "from-red-500 via-rose-700 to-pink-600"); players[0].isFrozen = true; setTimeout(() => { players[0].isFrozen = false; hideIndicator('botCardLine'); }, 10000); } 
+            else if (effect === 'SOSPENSIONE') { showMessage("🤖 BOT: SOSPENSIONE!", "from-red-500 via-rose-700 to-pink-600"); players[0].isFrozen = true; botSospensioneTimer = 10; } 
             else if (effect === 'RIGORE') { showMessage("🤖 BOT: RIGORE!", "from-zinc-100 via-cyan-200 to-blue-400", true); setupPenalty('BOT', false); } 
             else if (effect === 'STAR_PLAYER') { showMessage("🤖 BOT: STAR PLAYER!", "from-yellow-300 via-amber-400 to-orange-500"); botStarActive = true; } 
             else if (effect === 'JOKER') { showMessage("🤖 BOT: JOKER!", "from-fuchsia-500 via-purple-500 to-indigo-500", true); botStarActive = true; setupPenalty('BOT', false); } 
             else if (effect === 'SHOOTOUT') { showMessage("🤖 BOT: SHOOTOUT!", "from-cyan-400 via-blue-500 to-indigo-600", true); setupPenalty('BOT', true); }
             else if (effect === 'MURO') { showMessage("🤖 BOT: MURO!", "from-sky-400 via-blue-500 to-indigo-600"); botMuroTimer = 30; botGoalHeight = 70; }
             else if (effect === 'FULMINE') { showMessage("🤖 BOT: FULMINE!", "from-amber-300 via-yellow-500 to-orange-600"); botSpeedTimer = 20; }
-            else if (effect === 'GHIACCIO') { showMessage("🤖 BOT: GHIACCIO!", "from-cyan-300 via-blue-400 to-indigo-500", true); players.forEach(p => { p.isFrozen = true; setTimeout(() => { p.isFrozen = false; }, 5000); }); setTimeout(() => hideIndicator('botCardLine'), 5000); }
+            else if (effect === 'GHIACCIO') { showMessage("🤖 BOT: GHIACCIO!", "from-cyan-300 via-blue-400 to-indigo-500", true); players.forEach(p => p.isFrozen = true); botGhiaccioTimer = 5; }
             else if (effect === 'MAGNETE') { showMessage("🤖 BOT: MAGNETE!", "from-gray-300 via-gray-500 to-zinc-700"); botMagnetTimer = 12; }
         }
 
@@ -735,14 +769,14 @@
 
             const effect = mySecretCard; showIndicator('playerCardLine', cardData[effect].title);
             if (effect === 'GOL_DOPPIO') { showMessage("CARTA: GOL DOPPIO!", "from-orange-500 via-red-500 to-rose-500"); playerDoubleGoalTimer = 60; } 
-            else if (effect === 'SOSPENSIONE') { showMessage("CARTA: SOSPENSIONE!", "from-red-600 via-rose-700 to-pink-600"); bots[0].isFrozen = true; setTimeout(() => { bots[0].isFrozen = false; hideIndicator('playerCardLine'); }, 10000); } 
+            else if (effect === 'SOSPENSIONE') { showMessage("CARTA: SOSPENSIONE!", "from-red-600 via-rose-700 to-pink-600"); bots[0].isFrozen = true; playerSospensioneTimer = 10; } 
             else if (effect === 'RIGORE') { showMessage("CARTA: RIGORE!", "from-zinc-100 via-cyan-200 to-blue-400", true); setupPenalty('PLAYER', false); } 
             else if (effect === 'STAR_PLAYER') { showMessage("CARTA: STAR PLAYER!", "from-yellow-300 via-amber-400 to-orange-500"); playerStarActive = true; } 
             else if (effect === 'JOKER') { showMessage("CARTA: JOKER!", "from-fuchsia-500 via-purple-500 to-indigo-500", true); playerStarActive = true; setupPenalty('PLAYER', false); } 
             else if (effect === 'SHOOTOUT') { showMessage("CARTA: SHOOTOUT!", "from-cyan-400 via-blue-500 to-indigo-600", true); setupPenalty('PLAYER', true); }
             else if (effect === 'MURO') { showMessage("CARTA: MURO!", "from-sky-400 via-blue-500 to-indigo-600"); playerMuroTimer = 30; playerGoalHeight = 70; }
             else if (effect === 'FULMINE') { showMessage("CARTA: FULMINE!", "from-amber-300 via-yellow-500 to-orange-600"); playerSpeedTimer = 20; }
-            else if (effect === 'GHIACCIO') { showMessage("CARTA: GHIACCIO!", "from-cyan-300 via-blue-400 to-indigo-500", true); bots.forEach(b => { b.isFrozen = true; setTimeout(() => { b.isFrozen = false; }, 5000); }); setTimeout(() => hideIndicator('playerCardLine'), 5000); }
+            else if (effect === 'GHIACCIO') { showMessage("CARTA: GHIACCIO!", "from-cyan-300 via-blue-400 to-indigo-500", true); bots.forEach(b => { b.isFrozen = true; }); playerGhiaccioTimer = 5; }
             else if (effect === 'MAGNETE') { showMessage("CARTA: MAGNETE!", "from-gray-300 via-gray-500 to-zinc-700"); playerMagnetTimer = 12; }
         });
 
@@ -1140,6 +1174,8 @@
             else if (playerMuroTimer > 0) { playerMuroTimer--; pCardText = `MURO: ${playerMuroTimer}s`; if(playerMuroTimer===0) { playerGoalHeight = 200; hideIndicator('playerCardLine'); } }
             else if (playerSpeedTimer > 0) { playerSpeedTimer--; pCardText = `FULMINE: ${playerSpeedTimer}s`; if(playerSpeedTimer===0) hideIndicator('playerCardLine'); }
             else if (playerMagnetTimer > 0) { playerMagnetTimer--; pCardText = `MAGNETE: ${playerMagnetTimer}s`; if(playerMagnetTimer===0) hideIndicator('playerCardLine'); }
+            else if (playerSospensioneTimer > 0) { playerSospensioneTimer--; pCardText = `ROSSO: ${playerSospensioneTimer}s`; if(playerSospensioneTimer===0) { bots[0].isFrozen = false; hideIndicator('playerCardLine'); } }
+            else if (playerGhiaccioTimer > 0) { playerGhiaccioTimer--; pCardText = `GHIACCIO: ${playerGhiaccioTimer}s`; if(playerGhiaccioTimer===0) { bots.forEach(b => b.isFrozen = false); hideIndicator('playerCardLine'); } }
             if (pCardText) showIndicator('playerCardLine', pCardText);
 
             let bCardText = null;
@@ -1147,6 +1183,8 @@
             else if (botMuroTimer > 0) { botMuroTimer--; bCardText = `MURO: ${botMuroTimer}s`; if(botMuroTimer===0) { botGoalHeight = 200; hideIndicator('botCardLine'); } }
             else if (botSpeedTimer > 0) { botSpeedTimer--; bCardText = `FULMINE: ${botSpeedTimer}s`; if(botSpeedTimer===0) hideIndicator('botCardLine'); }
             else if (botMagnetTimer > 0) { botMagnetTimer--; bCardText = `MAGNETE: ${botMagnetTimer}s`; if(botMagnetTimer===0) hideIndicator('botCardLine'); }
+            else if (botSospensioneTimer > 0) { botSospensioneTimer--; bCardText = `ROSSO: ${botSospensioneTimer}s`; if(botSospensioneTimer===0) { players[0].isFrozen = false; hideIndicator('botCardLine'); } }
+            else if (botGhiaccioTimer > 0) { botGhiaccioTimer--; bCardText = `GHIACCIO: ${botGhiaccioTimer}s`; if(botGhiaccioTimer===0) { players.forEach(p => p.isFrozen = false); hideIndicator('botCardLine'); } }
             if (bCardText) showIndicator('botCardLine', bCardText);
 
             let m = Math.floor(timeLeft / 60).toString().padStart(2, '0'); let s = (timeLeft % 60).toString().padStart(2, '0'); const timerEl = document.getElementById('timer'); timerEl.innerText = `${m}:${s}`;
