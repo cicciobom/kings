@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kings League - Mini Game</title>
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png" type="image/png">
     
@@ -15,6 +15,7 @@
             color: white; 
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             user-select: none;
+            touch-action: none; /* Previene scroll e zoom su mobile */
         }
         
         canvas { 
@@ -27,6 +28,12 @@
             transition: all 0.5s ease;
             position: relative;
             z-index: 1;
+            width: 100%;
+            height: 100%;
+            max-width: 960px;
+            max-height: 540px;
+            object-fit: contain;
+            aspect-ratio: 16/9;
         }
         
         #messageBox {
@@ -48,9 +55,12 @@
         /* Stili Carte Segrete Premium */
         .card-select { perspective: 1000px; cursor: pointer; }
         .card-select-inner {
-            position: relative; width: 140px; height: 200px;
+            position: relative; width: 120px; height: 180px;
             transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
             transform-style: preserve-3d;
+        }
+        @media (min-width: 768px) {
+            .card-select-inner { width: 140px; height: 200px; }
         }
         .card-select.flipped .card-select-inner { transform: rotateY(180deg) scale(1.1); }
         .card-select:hover:not(.flipped) .card-select-inner { transform: scale(1.08) translateY(-15px); }
@@ -65,7 +75,7 @@
             background: radial-gradient(circle at top right, #18181b 0%, #09090b 100%);
             border: 3px solid #22c55e;
             box-shadow: 0 0 25px rgba(34, 197, 94, 0.4), inset 0 0 20px rgba(34, 197, 94, 0.2);
-            color: #d4d4d8; font-size: 4rem; 
+            color: #d4d4d8; font-size: 3rem; 
         }
         .card-front {
             transform: rotateY(180deg); flex-direction: column;
@@ -76,7 +86,7 @@
         .team-badge {
             background: linear-gradient(145deg, #18181b 0%, #09090b 100%);
             border-radius: 16px; display: flex; align-items: center; justify-content: center;
-            flex-direction: column; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer; padding: 12px;
+            flex-direction: column; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer; padding: 8px;
             border: 3px solid transparent; position: relative; overflow: hidden;
         }
         .team-badge::before {
@@ -91,19 +101,24 @@
             border-color: rgba(255,255,255,0.3);
         }
         .team-badge-icon {
-            font-size: 4rem; margin-bottom: 8px; z-index: 2;
+            font-size: 2.5rem; margin-bottom: 4px; z-index: 2;
             filter: drop-shadow(0 5px 8px rgba(0,0,0,0.9));
         }
         .team-badge-img {
-            width: 70px; height: 70px; object-fit: contain; margin-bottom: 8px; z-index: 2;
+            width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px; z-index: 2;
             filter: drop-shadow(0 5px 8px rgba(0,0,0,0.9));
         }
+        @media (min-width: 768px) {
+            .team-badge-icon { font-size: 4rem; margin-bottom: 8px; }
+            .team-badge-img { width: 70px; height: 70px; margin-bottom: 8px; }
+            .team-badge { padding: 12px; }
+        }
         .team-badge-text {
-            font-weight: 900; font-size: 1.35rem; letter-spacing: -0.05em; z-index: 2;
+            font-weight: 900; font-size: 1.1rem; letter-spacing: -0.05em; z-index: 2;
             text-shadow: 0 3px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
         }
 
-        /* Scoreboard E-Sports Rinnovato */
+        /* Scoreboard */
         .skew-left { transform: skewX(-25deg); }
         .unskew-left { transform: skewX(25deg); }
         
@@ -118,17 +133,24 @@
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center relative overflow-hidden bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-950 via-black to-black">
 
+    <!-- Avviso Schermo Verticale -->
+    <div id="portraitWarning" class="fixed inset-0 bg-zinc-950 z-[200] flex flex-col items-center justify-center text-center px-6 hidden">
+        <span class="text-7xl mb-6 animate-bounce">📱🔄</span>
+        <h1 class="text-4xl font-black text-white italic uppercase mb-4 drop-shadow-lg">Ruota il telefono</h1>
+        <p class="text-zinc-400 text-xl font-medium">L'arena richiede la modalità orizzontale (Landscape) per funzionare al meglio.</p>
+    </div>
+
     <!-- Sfondo Menu Canvas -->
     <canvas id="bgCanvas" class="absolute inset-0 w-full h-full z-0 opacity-40 pointer-events-none" style="border: none; box-shadow: none;"></canvas>
 
     <!-- MENU INIZIALE -->
-    <div id="mainMenuScreen" class="absolute inset-0 bg-black/80 z-[90] flex flex-col items-center justify-center transition-opacity duration-700 backdrop-blur-sm">
-        <img src="Kingsleaguelogo.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png'" alt="Kings League" class="h-40 mb-12 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.4)] floating">
+    <div id="mainMenuScreen" class="absolute inset-0 bg-black/80 z-[90] flex flex-col items-center justify-center transition-opacity duration-700 backdrop-blur-sm px-4 text-center">
+        <img src="Kingsleaguelogo.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png'" alt="Kings League" class="h-28 md:h-40 mb-8 md:mb-12 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.4)] floating">
         
-        <h1 class="text-7xl font-black text-white italic mb-4 tracking-tighter drop-shadow-[0_5px_15px_rgba(0,0,0,1)] uppercase">IL CALCIO HA NUOVE REGOLE</h1>
-        <p class="text-zinc-400 font-medium text-2xl mb-16 tracking-widest uppercase">Simulatore E-Sports Ufficiale</p>
+        <h1 class="text-5xl md:text-7xl font-black text-white italic mb-4 tracking-tighter drop-shadow-[0_5px_15px_rgba(0,0,0,1)] uppercase">IL CALCIO HA NUOVE REGOLE</h1>
+        <p class="text-zinc-400 font-medium text-lg md:text-2xl mb-12 md:mb-16 tracking-widest uppercase">Simulatore E-Sports Ufficiale</p>
         
-        <button onclick="goToTeamSelection()" class="group relative px-12 py-5 font-black text-zinc-950 bg-gradient-to-r from-orange-500 to-yellow-400 rounded-full text-3xl hover:scale-110 transition-all duration-300 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.6)] cursor-pointer ring-4 ring-zinc-950">
+        <button onclick="goToTeamSelection()" class="group relative px-8 py-4 md:px-12 md:py-5 font-black text-zinc-950 bg-gradient-to-r from-orange-500 to-yellow-400 rounded-full text-xl md:text-3xl hover:scale-110 transition-all duration-300 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.6)] cursor-pointer ring-4 ring-zinc-950">
             <span class="relative z-10 flex items-center gap-3">
                 ▶ ENTRA NELL'ARENA
             </span>
@@ -137,200 +159,268 @@
     </div>
 
     <!-- Schermata Selezione Squadra -->
-    <div id="teamSelectionScreen" class="absolute inset-0 bg-zinc-950/90 z-[80] flex flex-col items-center justify-center transition-opacity duration-700 backdrop-blur-md hidden">
-        <img src="Kingsleaguelogo.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png'" alt="Kings League" class="h-24 mb-6 object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+    <div id="teamSelectionScreen" class="absolute inset-0 bg-zinc-950/90 z-[80] flex flex-col items-center justify-center transition-opacity duration-700 backdrop-blur-md hidden py-4 overflow-y-auto">
+        <img src="Kingsleaguelogo.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png'" alt="Kings League" class="h-16 md:h-24 mb-4 object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.2)] mt-auto">
         
-        <h1 class="text-5xl font-black text-white italic mb-2 tracking-tighter drop-shadow-[0_5px_15px_rgba(0,0,0,1)]">SCEGLI LA TUA FRANCHIGIA</h1>
-        <p class="text-zinc-400 font-medium text-lg mb-10">Seleziona il team per scendere in campo</p>
-        <div id="teamGrid" class="grid grid-cols-4 md:grid-cols-6 gap-6 max-w-6xl px-4"></div>
+        <h1 class="text-3xl md:text-5xl font-black text-white italic mb-2 tracking-tighter drop-shadow-[0_5px_15px_rgba(0,0,0,1)] text-center px-4">SCEGLI LA TUA FRANCHIGIA</h1>
+        <p class="text-zinc-400 font-medium text-sm md:text-lg mb-6 text-center">Seleziona il team per scendere in campo</p>
+        <div id="teamGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 md:gap-6 max-w-6xl px-4 mb-auto"></div>
     </div>
 
     <!-- Header / Scoreboard Ridisegnato -->
-    <div class="absolute top-4 w-full flex justify-center items-start z-10 pointer-events-none px-6">
-        <div class="flex items-start justify-center gap-4">
+    <div class="absolute top-2 md:top-4 w-full flex justify-center items-start z-40 pointer-events-none px-2 scale-[0.65] sm:scale-75 md:scale-100 origin-top">
+        <div class="flex items-start justify-center gap-2 md:gap-4">
             
             <!-- LED Esterni TU -->
             <div class="flex flex-col gap-2 mt-3 skew-left">
-                <div id="playerPresidentLine" class="w-3 h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500"></div>
-                <div id="playerCardLine" class="w-3 h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500"></div>
+                <div id="playerPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500"></div>
+                <div id="playerCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500"></div>
             </div>
 
             <!-- Blocco Centrale Scoreboard -->
             <div class="flex flex-col items-center filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
                 
                 <!-- Riga Alta: Punteggi e Logo -->
-                <div class="flex items-center h-16 relative">
+                <div class="flex items-center h-12 md:h-16 relative">
                     
                     <!-- Tabellone Player -->
-                    <div id="playerScoreCard" class="skew-left bg-zinc-900 border-b-4 border-l-4 transition-colors duration-500 w-80 h-full flex items-center z-10" style="margin-right: -10px;">
-                        <div class="unskew-left flex items-center justify-between w-full px-6">
-                            <div id="playerLogoUI" class="w-12 h-12 flex items-center justify-center text-4xl drop-shadow-md"></div>
-                            <span id="playerAcronymUI" class="text-3xl font-black tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pt-1 flex-1 text-center">TU</span>
-                            <span id="scoreLeft" class="text-5xl font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pl-2">0</span>
+                    <div id="playerScoreCard" class="skew-left bg-zinc-900 border-b-4 border-l-4 transition-colors duration-500 w-48 md:w-80 h-full flex items-center z-10" style="margin-right: -10px;">
+                        <div class="unskew-left flex items-center justify-between w-full px-3 md:px-6">
+                            <div id="playerLogoUI" class="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center text-2xl md:text-4xl drop-shadow-md"></div>
+                            <span id="playerAcronymUI" class="text-xl md:text-3xl font-black tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pt-1 flex-1 text-center">TU</span>
+                            <span id="scoreLeft" class="text-3xl md:text-5xl font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pl-2">0</span>
                         </div>
                     </div>
 
                     <!-- Logo KL Centrale -->
-                    <div class="bg-zinc-950 border-y-2 border-zinc-700 px-6 h-[115%] flex items-center justify-center z-20 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.9)] min-w-[140px]">
-                        <img src="Kingsleaguelogo.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png'" alt="Kings League" class="h-10 object-contain drop-shadow-[0_2px_5px_rgba(255,255,255,0.2)]">
+                    <div class="bg-zinc-950 border-y-2 border-zinc-700 px-4 md:px-6 h-[115%] flex items-center justify-center z-20 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.9)] min-w-[80px] md:min-w-[140px]">
+                        <img src="Kingsleaguelogo.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png'" alt="Kings League" class="h-6 md:h-10 object-contain drop-shadow-[0_2px_5px_rgba(255,255,255,0.2)]">
                     </div>
 
                     <!-- Tabellone Bot -->
-                    <div id="botScoreCard" class="skew-right bg-zinc-900 border-b-4 border-r-4 transition-colors duration-500 w-80 h-full flex items-center z-10" style="margin-left: -10px;">
-                        <div class="unskew-right flex items-center justify-between w-full px-6 flex-row-reverse">
-                            <div id="botLogoUI" class="w-12 h-12 flex items-center justify-center text-4xl drop-shadow-md"></div>
-                            <span id="botAcronymUI" class="text-3xl font-black tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pt-1 flex-1 text-center">BOT</span>
-                            <span id="scoreRight" class="text-5xl font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pr-2">0</span>
+                    <div id="botScoreCard" class="skew-right bg-zinc-900 border-b-4 border-r-4 transition-colors duration-500 w-48 md:w-80 h-full flex items-center z-10" style="margin-left: -10px;">
+                        <div class="unskew-right flex items-center justify-between w-full px-3 md:px-6 flex-row-reverse">
+                            <div id="botLogoUI" class="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center text-2xl md:text-4xl drop-shadow-md"></div>
+                            <span id="botAcronymUI" class="text-xl md:text-3xl font-black tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pt-1 flex-1 text-center">BOT</span>
+                            <span id="scoreRight" class="text-3xl md:text-5xl font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pr-2">0</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Riga Bassa: Timer -->
-                <div id="timerContainer" class="bg-black border-x-2 border-b-2 border-zinc-700 px-8 py-1 rounded-b-xl shadow-lg -mt-[2px] z-10">
-                    <div id="timer" class="text-2xl font-mono font-black text-white leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">03:00</div>
+                <div id="timerContainer" class="bg-black border-x-2 border-b-2 border-zinc-700 px-6 py-1 md:px-8 md:py-1 rounded-b-xl shadow-lg -mt-[2px] z-10">
+                    <div id="timer" class="text-xl md:text-2xl font-mono font-black text-white leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">03:00</div>
                 </div>
             </div>
 
             <!-- LED Esterni BOT -->
             <div class="flex flex-col gap-2 mt-3 skew-right">
-                <div id="botPresidentLine" class="w-3 h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 opacity-30"></div>
-                <div id="botCardLine" class="w-3 h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500"></div>
+                <div id="botPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 opacity-30"></div>
+                <div id="botCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500"></div>
             </div>
 
         </div>
     </div>
 
-    <!-- Indicatori Carte Segrete (Pop-up temporali sotto il tabellone) -->
-    <div class="absolute top-28 w-full flex justify-center gap-6 z-10 pointer-events-none px-6">
-        <div class="flex-1 flex flex-col items-end pr-[120px]">
-            <div id="playerDoubleGoalIndicator" class="hidden bg-red-600/90 border border-red-400 rounded-lg text-white text-[10px] font-bold py-1 px-3 uppercase shadow-[0_0_15px_rgba(220,38,38,0.6)] mb-2 animate-pulse">
+    <!-- Indicatori Carte Segrete -->
+    <div class="absolute top-16 md:top-28 w-full flex justify-center gap-6 z-40 pointer-events-none px-6 scale-[0.65] md:scale-100">
+        <div class="flex-1 flex flex-col items-end pr-[80px] md:pr-[120px]">
+            <div id="playerDoubleGoalIndicator" class="hidden bg-red-600/90 border border-red-400 rounded-lg text-white text-[10px] md:text-xs font-bold py-1 px-3 uppercase shadow-[0_0_15px_rgba(220,38,38,0.6)] mb-2 animate-pulse">
                 🔥 Gol Doppio: <span id="playerDoubleGoalTimerUI">60</span>s
             </div>
-            <div id="starPlayerIndicator" class="hidden bg-yellow-500/90 border border-yellow-300 rounded-lg text-black text-[10px] font-bold py-1 px-3 uppercase shadow-[0_0_15px_rgba(234,179,8,0.6)]">
+            <div id="starPlayerIndicator" class="hidden bg-yellow-500/90 border border-yellow-300 rounded-lg text-black text-[10px] md:text-xs font-bold py-1 px-3 uppercase shadow-[0_0_15px_rgba(234,179,8,0.6)]">
                 ⭐ Star Player
             </div>
         </div>
-        <div class="w-32"></div>
-        <div class="flex-1 flex flex-col items-start pl-[120px]">
-            <div id="botDoubleGoalIndicator" class="hidden bg-purple-600/90 border border-purple-400 rounded-lg text-white text-[10px] font-bold py-1 px-3 uppercase shadow-[0_0_15px_rgba(168,85,247,0.6)] mb-2 animate-pulse">
+        <div class="w-20 md:w-32"></div>
+        <div class="flex-1 flex flex-col items-start pl-[80px] md:pl-[120px]">
+            <div id="botDoubleGoalIndicator" class="hidden bg-purple-600/90 border border-purple-400 rounded-lg text-white text-[10px] md:text-xs font-bold py-1 px-3 uppercase shadow-[0_0_15px_rgba(168,85,247,0.6)] mb-2 animate-pulse">
                 🔥 Gol Doppio: <span id="botDoubleGoalTimerUI">60</span>s
             </div>
-            <div id="botStarPlayerIndicator" class="hidden bg-purple-500/90 border border-purple-300 rounded-lg text-white text-[10px] font-bold py-1 px-3 uppercase shadow-[0_0_15px_rgba(168,85,247,0.6)]">
+            <div id="botStarPlayerIndicator" class="hidden bg-purple-500/90 border border-purple-300 rounded-lg text-white text-[10px] md:text-xs font-bold py-1 px-3 uppercase shadow-[0_0_15px_rgba(168,85,247,0.6)]">
                 ⭐ Star Player
             </div>
         </div>
     </div>
 
     <!-- Messaggi in-game -->
-    <div id="messageBox" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none text-center">
+    <div id="messageBox" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none text-center w-full">
     </div>
 
     <!-- Contenitore Campo -->
-    <div id="canvasContainer" class="mt-14 transition-transform duration-100 z-10 relative">
+    <div id="canvasContainer" class="w-full max-w-[960px] aspect-[16/9] transition-transform duration-100 z-10 relative px-2 mt-16 md:mt-20">
         <canvas id="gameCanvas" width="960" height="540"></canvas>
     </div>
 
     <!-- Bottoni Azioni -->
-    <div class="absolute bottom-6 w-full px-12 flex justify-center gap-10 z-20">
-        <button id="presidentBtn" class="group relative px-6 py-3 font-black text-zinc-950 bg-gradient-to-r from-yellow-300 to-yellow-600 rounded-full text-base hover:scale-105 transition-all duration-300 overflow-hidden shadow-[0_0_30px_rgba(234,179,8,0.5)] cursor-pointer ring-4 ring-zinc-950 flex flex-col items-center">
-            <span class="relative z-10 flex items-center gap-2">👑 RIGORE PRESIDENZIALE</span>
+    <div class="absolute bottom-2 md:bottom-6 w-full px-2 md:px-12 flex justify-center gap-4 md:gap-10 z-30 pointer-events-none">
+        <button id="presidentBtn" class="pointer-events-auto group relative px-3 py-2 md:px-6 md:py-3 font-black text-zinc-950 bg-gradient-to-r from-yellow-300 to-yellow-600 rounded-full text-xs md:text-base hover:scale-105 transition-all duration-300 overflow-hidden shadow-[0_0_30px_rgba(234,179,8,0.5)] cursor-pointer ring-2 md:ring-4 ring-zinc-950 flex flex-col items-center">
+            <span class="relative z-10 flex items-center gap-1 md:gap-2">👑 <span class="hidden sm:inline">RIGORE</span> PRESID.</span>
             <div class="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
         </button>
 
-        <button id="cardBtn" class="group relative px-6 py-3 font-black text-zinc-950 bg-gradient-to-r from-green-400 to-emerald-600 rounded-full text-base hover:scale-105 transition-all duration-300 overflow-hidden shadow-[0_0_30px_rgba(34,197,94,0.5)] cursor-pointer ring-4 ring-zinc-950 flex flex-col items-center">
-            <span class="relative z-10 flex items-center gap-2">🃏 ATTIVA CARTA SEGRETA</span>
+        <button id="cardBtn" class="pointer-events-auto group relative px-3 py-2 md:px-6 md:py-3 font-black text-zinc-950 bg-gradient-to-r from-green-400 to-emerald-600 rounded-full text-xs md:text-base hover:scale-105 transition-all duration-300 overflow-hidden shadow-[0_0_30px_rgba(34,197,94,0.5)] cursor-pointer ring-2 md:ring-4 ring-zinc-950 flex flex-col items-center">
+            <span class="relative z-10 flex items-center gap-1 md:gap-2">🃏 ATTIVA CARTA</span>
             <div class="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
         </button>
     </div>
 
+    <!-- Controlli Mobile (Touch) -->
+    <div id="mobileControls" class="absolute inset-0 pointer-events-none z-20 hidden">
+        <!-- Area Joystick (Sinistra) -->
+        <div id="joystickZone" class="absolute bottom-2 left-4 md:bottom-8 md:left-8 w-32 h-32 md:w-40 md:h-40 bg-white/5 border-2 border-white/10 rounded-full pointer-events-auto backdrop-blur-sm flex items-center justify-center touch-none">
+            <div id="joystickKnob" class="w-12 h-12 md:w-16 md:h-16 bg-white/40 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-transform duration-75"></div>
+        </div>
+        <!-- Area Scatto (Destra) -->
+        <div class="absolute bottom-6 right-6 md:bottom-10 md:right-10 flex gap-4 pointer-events-auto">
+            <button id="sprintBtn" class="w-20 h-20 md:w-24 md:h-24 bg-blue-500/40 rounded-full border-2 border-white/20 active:bg-blue-500/70 backdrop-blur-sm shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center justify-center text-white font-bold text-3xl touch-none">🏃</button>
+        </div>
+    </div>
+
     <!-- Regolamento -->
-    <button onclick="document.getElementById('rulesModal').classList.remove('hidden')" class="absolute top-4 right-4 z-30 px-3 py-1.5 bg-zinc-800/90 border border-zinc-600 text-zinc-300 font-bold rounded-full hover:bg-zinc-700 transition-colors backdrop-blur-md shadow-xl flex items-center gap-2 text-xs">
+    <button onclick="document.getElementById('rulesModal').classList.remove('hidden')" class="absolute top-2 right-2 md:top-4 md:right-4 z-40 px-3 py-1.5 bg-zinc-800/90 border border-zinc-600 text-zinc-300 font-bold rounded-full hover:bg-zinc-700 transition-colors backdrop-blur-md shadow-xl flex items-center gap-2 text-[10px] md:text-xs">
         <span>❓</span> Info
     </button>
     
     <!-- Modal Regole -->
-    <div id="rulesModal" class="hidden absolute inset-0 bg-black/80 z-[100] flex items-center justify-center backdrop-blur-md">
-        <div class="bg-zinc-900 border-2 border-orange-500 p-8 rounded-3xl max-w-2xl text-zinc-300 shadow-[0_0_50px_rgba(249,115,22,0.4)] relative mx-4">
+    <div id="rulesModal" class="hidden absolute inset-0 bg-black/80 z-[100] flex items-center justify-center backdrop-blur-md px-4">
+        <div class="bg-zinc-900 border-2 border-orange-500 p-6 md:p-8 rounded-3xl max-w-2xl text-zinc-300 shadow-[0_0_50px_rgba(249,115,22,0.4)] relative w-full">
             <button onclick="document.getElementById('rulesModal').classList.add('hidden')" class="absolute top-4 right-4 text-zinc-500 hover:text-white font-bold text-3xl leading-none">&times;</button>
-            <h2 class="text-4xl font-black text-white italic mb-6 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-500 uppercase">Regolamento</h2>
-            <ul class="space-y-4 text-base">
-                <li><strong class="text-white">🚀 Scatto (Stamina):</strong> Tieni premuta la <span class="bg-zinc-800 px-2 rounded text-white font-mono">Barra Spaziatrice</span> per correre.</li>
+            <h2 class="text-3xl md:text-4xl font-black text-white italic mb-4 md:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-500 uppercase">Regolamento</h2>
+            <ul class="space-y-3 md:space-y-4 text-sm md:text-base">
+                <li><strong class="text-white">🚀 Scatto:</strong> <span class="bg-zinc-800 px-2 rounded text-white font-mono">Spazio</span> o <b>Pulsante Mobile</b>.</li>
                 <li><strong class="text-white">🧑‍🤝‍🧑 Escalation:</strong> Si inizia 1v1. Ogni 10s entra un compagno (fino a 3v3).</li>
                 <li><strong class="text-white">🎲 Il Dado (1:00):</strong> Tre eventi possibili! Porte Giganti, ritorno all'1v1, o palla infuocata.</li>
                 <li><strong class="text-white">👑 Rigore Presidenziale:</strong> Usalo 1 volta per un rigore istantaneo da lontano!</li>
-                <li><strong class="text-white">🃏 Carte Segrete (NOVITÀ):</strong> Aggiunte le carte <b>Joker</b> (Rigore + Star Player) e <b>Shootout</b>!</li>
-                <li><strong class="text-white">🧲 Salvataggio Palla:</strong> Se la palla si blocca a muro per 2s, diventerà un fantasma verde e schizzerà al centro trapassando i giocatori!</li>
+                <li><strong class="text-white">🃏 Carte Segrete:</strong> Vantaggi tattici (Joker, Shootout, ecc).</li>
+                <li><strong class="text-white">🧲 Salvataggio Palla:</strong> Se si blocca a muro, torna al centro.</li>
             </ul>
         </div>
     </div>
 
     <!-- Schermata di Fine Partita -->
-    <div id="gameOverScreen" class="absolute inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-700">
-        <h1 id="gameOverTitle" class="text-8xl font-black text-white italic mb-6 tracking-tighter drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">TRIPLICE FISCHIO</h1>
-        <p id="gameOverSub" class="text-4xl text-zinc-300 mb-12 font-bold drop-shadow-lg">Risultato Finale: 0 - 0</p>
-        <button onclick="location.reload()" class="px-10 py-4 bg-white text-black font-black rounded-full text-2xl hover:bg-zinc-200 hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,255,255,0.4)]">
+    <div id="gameOverScreen" class="absolute inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-700 px-4 text-center">
+        <h1 id="gameOverTitle" class="text-5xl md:text-8xl font-black text-white italic mb-4 md:mb-6 tracking-tighter drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">TRIPLICE FISCHIO</h1>
+        <p id="gameOverSub" class="text-2xl md:text-4xl text-zinc-300 mb-8 md:mb-12 font-bold drop-shadow-lg">Risultato Finale: 0 - 0</p>
+        <button onclick="location.reload()" class="px-8 py-3 md:px-10 md:py-4 bg-white text-black font-black rounded-full text-xl md:text-2xl hover:bg-zinc-200 hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,255,255,0.4)]">
             GIOCA DI NUOVO
         </button>
     </div>
 
     <!-- Schermata Selezione Carta -->
-    <div id="cardSelectionScreen" class="absolute inset-0 bg-zinc-950/95 z-[70] flex flex-col items-center justify-center transition-opacity duration-700 backdrop-blur-md hidden">
-        <h1 class="text-6xl font-black text-white italic mb-16 tracking-tighter drop-shadow-[0_0_25px_rgba(34,197,94,0.6)] text-center">PESCA LA TUA CARTA<br><span class="text-2xl text-zinc-400 font-medium not-italic tracking-normal">Scegli il tuo vantaggio tattico</span></h1>
-        <div class="flex gap-8" id="cardsContainer">
+    <div id="cardSelectionScreen" class="absolute inset-0 bg-zinc-950/95 z-[70] flex flex-col items-center justify-center transition-opacity duration-700 backdrop-blur-md hidden overflow-hidden px-2">
+        <h1 class="text-3xl md:text-6xl font-black text-white italic mb-8 md:mb-16 tracking-tighter drop-shadow-[0_0_25px_rgba(34,197,94,0.6)] text-center">PESCA LA TUA CARTA<br><span class="text-lg md:text-2xl text-zinc-400 font-medium not-italic tracking-normal">Scegli il tuo vantaggio tattico</span></h1>
+        <div class="flex flex-wrap justify-center gap-4 md:gap-8 max-w-4xl" id="cardsContainer">
             <!-- Generate via JS -->
         </div>
     </div>
 
     <!-- Menu Pausa -->
     <div id="pauseMenu" class="hidden absolute inset-0 bg-black/80 z-[90] flex flex-col items-center justify-center backdrop-blur-md transition-opacity duration-300">
-        <img src="Kingsleaguelogo.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png'" alt="Kings League" class="h-24 mb-10 object-contain drop-shadow-[0_2px_15px_rgba(255,255,255,0.3)]">
-        <h2 class="text-6xl font-black text-white italic mb-12 tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">IN PAUSA</h2>
+        <img src="Kingsleaguelogo.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/c/c4/Kingsleaguelogo.png'" alt="Kings League" class="h-16 md:h-24 mb-6 md:mb-10 object-contain drop-shadow-[0_2px_15px_rgba(255,255,255,0.3)]">
+        <h2 class="text-4xl md:text-6xl font-black text-white italic mb-8 md:mb-12 tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">IN PAUSA</h2>
         
-        <div id="pauseMainButtons" class="flex flex-col gap-6 w-80">
-            <button onclick="togglePause()" class="px-8 py-5 font-black text-zinc-950 bg-gradient-to-r from-green-400 to-green-600 rounded-full text-2xl hover:scale-105 transition-transform shadow-[0_0_25px_rgba(34,197,94,0.5)]">▶ RIPRENDI</button>
-            <button onclick="showSubMenu('controlsMenu')" class="px-8 py-5 font-black text-white bg-zinc-800 border-2 border-zinc-600 rounded-full text-xl hover:bg-zinc-700 transition-colors shadow-lg">🎮 COMANDI</button>
-            <button onclick="location.reload()" class="px-8 py-5 font-black text-white bg-red-800 border-2 border-red-600 rounded-full text-xl hover:bg-red-700 transition-colors shadow-lg">⏹ ABBANDONA</button>
+        <div id="pauseMainButtons" class="flex flex-col gap-4 md:gap-6 w-64 md:w-80">
+            <button onclick="togglePause()" class="px-6 py-4 md:px-8 md:py-5 font-black text-zinc-950 bg-gradient-to-r from-green-400 to-green-600 rounded-full text-xl md:text-2xl hover:scale-105 transition-transform shadow-[0_0_25px_rgba(34,197,94,0.5)]">▶ RIPRENDI</button>
+            <button onclick="showSubMenu('controlsMenu')" class="px-6 py-3 md:px-8 md:py-5 font-black text-white bg-zinc-800 border-2 border-zinc-600 rounded-full text-lg md:text-xl hover:bg-zinc-700 transition-colors shadow-lg">🎮 COMANDI</button>
+            <button onclick="location.reload()" class="px-6 py-3 md:px-8 md:py-5 font-black text-white bg-red-800 border-2 border-red-600 rounded-full text-lg md:text-xl hover:bg-red-700 transition-colors shadow-lg">⏹ ABBANDONA</button>
         </div>
 
-        <div id="controlsMenu" class="hidden flex-col items-center w-[450px] text-center bg-zinc-900 p-10 rounded-[2rem] border border-zinc-700 shadow-2xl">
-            <h3 class="text-4xl font-black text-white mb-10 uppercase text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-500">Comandi</h3>
-            <ul class="text-zinc-300 space-y-6 text-left w-full mb-10 text-xl font-medium">
-                <li class="flex justify-between items-center border-b border-zinc-800 pb-4"><span>Movimento</span> <strong class="text-white bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-600">W A S D</strong></li>
-                <li class="flex justify-between items-center border-b border-zinc-800 pb-4"><span>Scatto / Sprint</span> <strong class="text-white bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-600">SPAZIO</strong></li>
-                <li class="flex justify-between items-center border-b border-zinc-800 pb-4"><span>Pausa</span> <strong class="text-white bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-600">ESC</strong></li>
+        <div id="controlsMenu" class="hidden flex-col items-center w-full max-w-[450px] text-center bg-zinc-900 p-6 md:p-10 rounded-[2rem] border border-zinc-700 shadow-2xl mx-4">
+            <h3 class="text-3xl md:text-4xl font-black text-white mb-6 md:mb-10 uppercase text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-500">Comandi</h3>
+            <ul class="text-zinc-300 space-y-4 md:space-y-6 text-left w-full mb-8 md:mb-10 text-base md:text-xl font-medium">
+                <li class="flex justify-between items-center border-b border-zinc-800 pb-4"><span>Movimento</span> <strong class="text-white bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-600">W A S D / Touch</strong></li>
+                <li class="flex justify-between items-center border-b border-zinc-800 pb-4"><span>Scatto / Sprint</span> <strong class="text-white bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-600">SPAZIO / Btn</strong></li>
             </ul>
-            <button onclick="showSubMenu('main')" class="px-10 py-4 font-black text-zinc-900 bg-white rounded-full text-xl hover:bg-zinc-200 transition-colors">INDIETRO</button>
-        </div>
-
-        <div id="settingsMenu" class="hidden flex-col items-center w-[450px] text-center bg-zinc-900 p-10 rounded-[2rem] border border-zinc-700 shadow-2xl">
-            <h3 class="text-4xl font-black text-white mb-10 uppercase text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-500">Impostazioni</h3>
-            <div class="flex flex-col gap-5 w-full mb-10">
-                <div class="px-6 py-5 bg-zinc-800 border border-zinc-600 rounded-2xl text-white font-bold text-xl flex justify-between items-center cursor-pointer hover:bg-zinc-700 transition-colors">
-                    Effetti Particellari <span class="text-green-400">ON</span>
-                </div>
-                <div class="px-6 py-5 bg-zinc-800 border border-zinc-600 rounded-2xl text-white font-bold text-xl flex justify-between items-center cursor-pointer hover:bg-zinc-700 transition-colors">
-                    Tremolio Schermo <span class="text-green-400">ON</span>
-                </div>
-            </div>
-            <button onclick="showSubMenu('main')" class="px-10 py-4 font-black text-zinc-900 bg-white rounded-full text-xl hover:bg-zinc-200 transition-colors">INDIETRO</button>
+            <button onclick="showSubMenu('main')" class="px-8 py-3 md:px-10 md:py-4 font-black text-zinc-900 bg-white rounded-full text-lg md:text-xl hover:bg-zinc-200 transition-colors">INDIETRO</button>
         </div>
     </div>
 
     <script>
+        // --- API ADATTAMENTO SCHERMO (Portrait vs Landscape) ---
+        function checkOrientation() {
+            const warning = document.getElementById('portraitWarning');
+            if (window.innerHeight > window.innerWidth) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        }
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        checkOrientation(); // Controllo iniziale
+
+        // --- SISTEMA CONTROLLI MOBILE (Touch API) ---
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (isTouchDevice) {
+            document.getElementById('mobileControls').classList.remove('hidden');
+        }
+
+        let inputX = 0; let inputY = 0;
+        let isJoystickActive = false;
+        let isSprintBtnPressed = false;
+
+        const joystickZone = document.getElementById('joystickZone');
+        const joystickKnob = document.getElementById('joystickKnob');
+        const sprintBtn = document.getElementById('sprintBtn');
+
+        function handleJoystick(e) {
+            e.preventDefault();
+            isJoystickActive = true;
+            let touch = e.touches[0];
+            let rect = joystickZone.getBoundingClientRect();
+            let centerX = rect.left + rect.width / 2;
+            let centerY = rect.top + rect.height / 2;
+
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            let maxDist = rect.width / 2.5; // Margine
+
+            if (dist > maxDist) {
+                dx = (dx/dist) * maxDist;
+                dy = (dy/dist) * maxDist;
+            }
+
+            joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+            
+            // Normalize per physics (-1 to 1)
+            inputX = dx / maxDist;
+            inputY = dy / maxDist;
+        }
+
+        function resetJoystick(e) {
+            e.preventDefault();
+            isJoystickActive = false;
+            joystickKnob.style.transform = `translate(0px, 0px)`;
+            inputX = 0; inputY = 0;
+        }
+
+        joystickZone.addEventListener('touchstart', handleJoystick, {passive: false});
+        joystickZone.addEventListener('touchmove', handleJoystick, {passive: false});
+        joystickZone.addEventListener('touchend', resetJoystick, {passive: false});
+        joystickZone.addEventListener('touchcancel', resetJoystick, {passive: false});
+
+        sprintBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isSprintBtnPressed = true; }, {passive: false});
+        sprintBtn.addEventListener('touchend', (e) => { e.preventDefault(); isSprintBtnPressed = false; }, {passive: false});
+        sprintBtn.addEventListener('touchcancel', (e) => { e.preventDefault(); isSprintBtnPressed = false; }, {passive: false});
+
+
         // --- GESTIONE SFONDO PARTICELLE (Menu Canvas) ---
         const bgCanvas = document.getElementById('bgCanvas');
         const bgCtx = bgCanvas.getContext('2d');
-        bgCanvas.width = window.innerWidth;
-        bgCanvas.height = window.innerHeight;
+        function resizeBgCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeBgCanvas);
+        resizeBgCanvas();
         let bgParticles = [];
 
-        for(let i=0; i<50; i++) {
+        for(let i=0; i<40; i++) {
             bgParticles.push({
-                x: Math.random() * bgCanvas.width,
-                y: Math.random() * bgCanvas.height,
-                r: Math.random() * 2 + 1,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
+                x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
+                r: Math.random() * 2 + 1, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
                 opacity: Math.random() * 0.5 + 0.1
             });
         }
@@ -341,11 +431,8 @@
                 p.x += p.vx; p.y += p.vy;
                 if(p.x < 0 || p.x > bgCanvas.width) p.vx *= -1;
                 if(p.y < 0 || p.y > bgCanvas.height) p.vy *= -1;
-                
-                bgCtx.beginPath();
-                bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                bgCtx.fillStyle = `rgba(255, 165, 0, ${p.opacity})`;
-                bgCtx.fill();
+                bgCtx.beginPath(); bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                bgCtx.fillStyle = `rgba(255, 165, 0, ${p.opacity})`; bgCtx.fill();
             });
             requestAnimationFrame(drawBgParticles);
         }
@@ -354,8 +441,6 @@
         // --- GIOCO PRINCIPALE ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-
-        const stallionsLogoUrl = '691246592.webp';
 
         const teamsInfo = {
             'APK': { id: 'APK', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/152293839.png', name: 'Alpak', main: '#ec4899', sub: '#18181b', text: '#ffffff' }, 
@@ -398,7 +483,7 @@
             'SOSPENSIONE': { icon: '🟥', title: 'SOSPENSIONE', desc: 'Capitano Nemico out', bgClass: 'bg-gradient-to-br from-red-800 to-red-950', textColor: 'text-white' },
             'STAR_PLAYER': { icon: '⭐', title: 'STAR PLAYER', desc: 'Tuo prossimo gol x2', bgClass: 'bg-gradient-to-br from-yellow-400 to-yellow-600', textColor: 'text-black' },
             'JOKER': { icon: '🃏', title: 'JOKER', desc: 'Rigore + Star Player!', bgClass: 'bg-gradient-to-br from-fuchsia-600 to-purple-900', textColor: 'text-white' },
-            'SHOOTOUT': { icon: '🏃', title: 'SHOOTOUT', desc: 'Rigore in movimento', bgClass: 'bg-gradient-to-br from-cyan-400 to-blue-600', textColor: 'text-white' }
+            'SHOOTOUT': { icon: '🏃', title: 'SHOOTOUT', desc: 'Rigore in movim.', bgClass: 'bg-gradient-to-br from-cyan-400 to-blue-600', textColor: 'text-white' }
         };
 
         let isFoulPaused = false;
@@ -409,22 +494,20 @@
         let players = []; let bots = [];
         
         const ball = { x: canvas.width/2, y: canvas.height/2, vx: 0, vy: 0, r: 10, friction: 0.96, color: '#ffffff', trail: [], ghostMode: 0, history: [] };
-
         let particles = [];
+        let sprintTrails = [];
+
         function createParticles(x, y, color, amount, speedMult = 1, isConfetti = false) {
             for (let i = 0; i < amount; i++) {
                 particles.push({
                     x: x, y: y,
-                    vx: (Math.random() - 0.5) * 10 * speedMult,
-                    vy: (Math.random() - 0.5) * 10 * speedMult,
+                    vx: (Math.random() - 0.5) * 10 * speedMult, vy: (Math.random() - 0.5) * 10 * speedMult,
                     life: 1.0, decay: isConfetti ? 0.01 : 0.05,
                     color: color, size: isConfetti ? Math.random() * 6 + 4 : Math.random() * 3 + 2,
                     isConfetti: isConfetti, spin: Math.random() * Math.PI * 2
                 });
             }
         }
-
-        let sprintTrails = [];
 
         function createEntity(startX, startY, teamInfo, isPlayer) {
             return {
@@ -441,7 +524,14 @@
         });
         window.addEventListener('keyup', e => { keys[e.code] = false; keys[e.key] = false; });
 
+        function enterFullscreen() {
+            if (isTouchDevice && document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        }
+
         function goToTeamSelection() {
+            enterFullscreen();
             document.getElementById('mainMenuScreen').classList.add('opacity-0', 'pointer-events-none');
             setTimeout(() => {
                 document.getElementById('mainMenuScreen').style.display = 'none';
@@ -455,17 +545,14 @@
             grid.innerHTML = '';
             Object.values(teamsInfo).forEach(team => {
                 const badge = document.createElement('div');
-                badge.className = 'w-[120px] h-[135px] team-badge shadow-2xl';
+                badge.className = 'w-full aspect-[4/5] team-badge shadow-2xl mx-auto';
                 badge.style.borderBottomColor = team.main;
                 
                 let iconHtml = team.img 
                     ? `<img src="${team.img}" alt="${team.name}" class="team-badge-img drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" onerror="this.outerHTML='<div class=\\'team-badge-icon\\'>${team.icon || '🛡️'}</div>'">` 
                     : `<div class="team-badge-icon">${team.icon}</div>`;
 
-                badge.innerHTML = `
-                    ${iconHtml}
-                    <span class="team-badge-text text-white">${team.id}</span>
-                `;
+                badge.innerHTML = `${iconHtml}<span class="team-badge-text text-white text-center">${team.id}</span>`;
                 badge.onclick = () => selectTeam(team.id);
                 grid.appendChild(badge);
             });
@@ -488,11 +575,10 @@
             document.getElementById('botScoreCard').style.borderRightColor = botTeam.main;
 
             document.getElementById('playerLogoUI').innerHTML = myTeam.img 
-                ? `<img src="${myTeam.img}" class="w-12 h-12 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" onerror="this.innerHTML='${myTeam.icon || '🛡️'}'">` 
+                ? `<img src="${myTeam.img}" class="w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" onerror="this.innerHTML='${myTeam.icon || '🛡️'}'">` 
                 : myTeam.icon;
-            
             document.getElementById('botLogoUI').innerHTML = botTeam.img 
-                ? `<img src="${botTeam.img}" class="w-12 h-12 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" onerror="this.innerHTML='${botTeam.icon || '🛡️'}'">` 
+                ? `<img src="${botTeam.img}" class="w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" onerror="this.innerHTML='${botTeam.icon || '🛡️'}'">` 
                 : botTeam.icon;
 
             document.getElementById('teamSelectionScreen').classList.add('opacity-0');
@@ -501,14 +587,14 @@
                 
                 const cardsContainer = document.getElementById('cardsContainer');
                 cardsContainer.innerHTML = '';
-                for(let i=0; i<5; i++) {
+                let numCards = window.innerWidth < 768 ? 4 : 5; // Meno carte su mobile per farle entrare
+                for(let i=0; i<numCards; i++) {
                     cardsContainer.innerHTML += `
                         <div class="card-select" onclick="pickCard(this)">
-                            <div class="card-select-inner"><div class="card-back"><svg viewBox="0 0 24 24" class="w-20 h-20 text-[#22c55e] drop-shadow-[0_0_15px_rgba(34,197,94,0.8)]" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24.961zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.181c-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.14 11.28-.9 16.14 2.101.54.3.72 1.02.42 1.56-.24.54-.96.72-1.5.42z"/></svg></div><div class="card-front"></div></div>
+                            <div class="card-select-inner"><div class="card-back"><svg viewBox="0 0 24 24" class="w-16 h-16 md:w-20 md:h-20 text-[#22c55e] drop-shadow-[0_0_15px_rgba(34,197,94,0.8)]" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24.961zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.181c-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.14 11.28-.9 16.14 2.101.54.3.72 1.02.42 1.56-.24.54-.96.72-1.5.42z"/></svg></div><div class="card-front"></div></div>
                         </div>
                     `;
                 }
-
                 const cardScreen = document.getElementById('cardSelectionScreen');
                 cardScreen.classList.remove('hidden');
                 gameState = 'CARD_SELECTION';
@@ -530,9 +616,9 @@
             const front = element.querySelector('.card-front');
             front.className = `card-front ${data.bgClass} ${data.textColor}`;
             front.innerHTML = `
-                <span class="text-6xl mb-4 drop-shadow-md">${data.icon}</span>
-                <span class="text-2xl font-black uppercase leading-tight tracking-tight mb-2">${data.title}</span>
-                <span class="text-sm font-bold opacity-90 leading-snug">${data.desc}</span>
+                <span class="text-4xl md:text-6xl mb-2 md:mb-4 drop-shadow-md">${data.icon}</span>
+                <span class="text-lg md:text-2xl font-black uppercase leading-tight tracking-tight mb-1 md:mb-2">${data.title}</span>
+                <span class="text-[10px] md:text-sm font-bold opacity-90 leading-snug">${data.desc}</span>
             `;
             element.classList.add('flipped');
 
@@ -558,7 +644,7 @@
             msgBox.innerHTML = `<span class="block animate-bounce">${text}</span>`;
             
             let baseClasses = "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-black italic transition-all duration-300 z-[100] pointer-events-none text-center uppercase tracking-tighter whitespace-nowrap";
-            let sizeClass = isLarge ? 'text-[7rem]' : 'text-6xl';
+            let sizeClass = isLarge ? 'text-4xl md:text-[7rem]' : 'text-3xl md:text-6xl';
             
             msgBox.className = `${baseClasses} ${sizeClass}`;
             
@@ -566,16 +652,13 @@
                 msgBox.classList.add('text-transparent', 'bg-clip-text', 'bg-gradient-to-r');
                 const colorClasses = colorHexOrClass.split(' ');
                 colorClasses.forEach(c => msgBox.classList.add(c));
-                
-                msgBox.style.webkitTextStroke = "3px rgba(0,0,0,0.9)";
+                msgBox.style.webkitTextStroke = window.innerWidth > 768 ? "3px rgba(0,0,0,0.9)" : "1px rgba(0,0,0,0.9)";
                 msgBox.style.filter = "drop-shadow(0 15px 25px rgba(0,0,0,1))";
                 msgBox.style.color = "";
-                msgBox.style.textShadow = "";
             } else {
                 msgBox.style.color = colorHexOrClass;
                 msgBox.style.textShadow = `0px 5px 20px rgba(0,0,0,1), 0px 0px 30px ${colorHexOrClass}`;
-                msgBox.style.webkitTextStroke = "4px black";
-                msgBox.style.filter = "";
+                msgBox.style.webkitTextStroke = window.innerWidth > 768 ? "4px black" : "2px black";
             }
             
             msgBox.classList.remove('hidden', 'opacity-0', 'scale-150'); 
@@ -605,7 +688,6 @@
         function scoreGoal(scorer) {
             triggerShake(25);
             let points = 1;
-            
             let teamColor = scorer === 'PLAYER' ? myTeam.main : botTeam.main;
             createParticles(scorer === 'PLAYER' ? canvas.width-30 : 30, canvas.height/2, teamColor, 150, 1.5, true);
             createParticles(scorer === 'PLAYER' ? canvas.width-30 : 30, canvas.height/2, '#ffffff', 50, 1.5, true);
@@ -646,18 +728,15 @@
         function showSubMenu(menuName) {
             document.getElementById('pauseMainButtons').classList.add('hidden');
             document.getElementById('controlsMenu').classList.add('hidden');
-            document.getElementById('settingsMenu').classList.add('hidden');
             
             if (menuName === 'main') document.getElementById('pauseMainButtons').classList.remove('hidden');
             else if (menuName === 'controlsMenu') document.getElementById('controlsMenu').classList.remove('hidden');
-            else if (menuName === 'settingsMenu') document.getElementById('settingsMenu').classList.remove('hidden');
         }
 
         function activateBotCard() {
             if (!gameActive || gameState !== 'PLAYING' || botCardUsed) return;
             botCardUsed = true;
             const effect = botSecretCard;
-            
             document.getElementById('botCardLine').style.opacity = '0'; 
             
             if (effect === 'GOL_DOPPIO') {
@@ -691,23 +770,23 @@
 
             const effect = mySecretCard;
             if (effect === 'GOL_DOPPIO') {
-                showMessage("HAI ATTIVATO: GOL DOPPIO!", "from-orange-500 via-red-500 to-rose-500");
+                showMessage("CARTA: GOL DOPPIO!", "from-orange-500 via-red-500 to-rose-500");
                 playerDoubleGoalTimer = 60; document.getElementById('playerDoubleGoalIndicator').classList.remove('hidden');
             } else if (effect === 'SOSPENSIONE') {
-                showMessage("HAI ATTIVATO: SOSPENSIONE!", "from-red-600 via-rose-700 to-pink-600");
+                showMessage("CARTA: SOSPENSIONE!", "from-red-600 via-rose-700 to-pink-600");
                 bots[0].isFrozen = true; setTimeout(() => { bots[0].isFrozen = false; }, 10000);
             } else if (effect === 'RIGORE') {
-                showMessage("HAI ATTIVATO: RIGORE!", "from-zinc-100 via-cyan-200 to-blue-400", true);
+                showMessage("CARTA: RIGORE!", "from-zinc-100 via-cyan-200 to-blue-400", true);
                 setupPenalty('PLAYER', false);
             } else if (effect === 'STAR_PLAYER') {
-                showMessage("HAI ATTIVATO: STAR PLAYER!", "from-yellow-300 via-amber-400 to-orange-500");
+                showMessage("CARTA: STAR PLAYER!", "from-yellow-300 via-amber-400 to-orange-500");
                 playerStarActive = true; document.getElementById('starPlayerIndicator').classList.remove('hidden');
             } else if (effect === 'JOKER') {
-                showMessage("HAI ATTIVATO: JOKER!", "from-fuchsia-500 via-purple-500 to-indigo-500", true);
+                showMessage("CARTA: JOKER!", "from-fuchsia-500 via-purple-500 to-indigo-500", true);
                 playerStarActive = true; document.getElementById('starPlayerIndicator').classList.remove('hidden');
                 setupPenalty('PLAYER', false);
             } else if (effect === 'SHOOTOUT') {
-                showMessage("HAI ATTIVATO: SHOOTOUT!", "from-cyan-400 via-blue-500 to-indigo-600", true);
+                showMessage("CARTA: SHOOTOUT!", "from-cyan-400 via-blue-500 to-indigo-600", true);
                 setupPenalty('PLAYER', true); 
             }
         });
@@ -716,7 +795,7 @@
             if (presidentPenaltyUsed || !gameActive || gameState !== 'PLAYING' || isPaused) return;
             presidentPenaltyUsed = true;
             document.getElementById('presidentBtn').classList.add('opacity-40', 'cursor-not-allowed', 'grayscale');
-            document.getElementById('presidentBtn').innerHTML = '<span class="relative z-10 flex items-center gap-2">❌ PRESIDENZIALE USATO</span>';
+            document.getElementById('presidentBtn').innerHTML = '<span class="relative z-10 flex items-center gap-2">❌ USATO</span>';
             document.getElementById('playerPresidentLine').style.opacity = '0'; 
 
             showMessage("👑 RIGORE PRESIDENZIALE!", "from-yellow-300 via-amber-400 to-orange-500", true);
@@ -724,9 +803,7 @@
         });
 
         function setupPenalty(taker, isShootout) {
-            gameState = 'FREE_KICK';
-            ball.vx = 0; ball.vy = 0; 
-            
+            gameState = 'FREE_KICK'; ball.vx = 0; ball.vy = 0; 
             [...players, ...bots].forEach(e => { e.x = canvas.width/2; e.y = -100; e.vx = 0; e.vy = 0; });
 
             if (taker === 'PLAYER') {
@@ -752,11 +829,9 @@
             }
         }
 
-        // --- FISICA, IA E ANTI-BLOCCO PALLA ---
-
+        // --- FISICA E GIOCO ---
         function handleCollisions(entity, b) {
             if (b.ghostMode > 0) return; 
-
             let dx = b.x - entity.x; let dy = b.y - entity.y; let dist = Math.sqrt(dx*dx + dy*dy);
             if (dist === 0) { dx = 1; dy = 0; dist = 1; }
 
@@ -767,18 +842,13 @@
                 }
                 let angle = Math.atan2(dy, dx);
                 let speedMag = Math.sqrt(entity.vx*entity.vx + entity.vy*entity.vy);
-                
                 let kickForce = 5.5 + (speedMag * 1.6); 
                 if (kickForce > 16) kickForce = 16;
-                b.vx = Math.cos(angle) * kickForce; 
-                b.vy = Math.sin(angle) * kickForce;
+                b.vx = Math.cos(angle) * kickForce; b.vy = Math.sin(angle) * kickForce;
                 
                 if (kickForce > 12) createParticles(b.x, b.y, '#facc15', 10, 1.2);
-
-                if (b.x < 30) b.vx += 3;
-                if (b.x > canvas.width - 30) b.vx -= 3;
-                if (b.y < 30) b.vy += 3;
-                if (b.y > canvas.height - 30) b.vy -= 3;
+                if (b.x < 30) b.vx += 3; if (b.x > canvas.width - 30) b.vx -= 3;
+                if (b.y < 30) b.vy += 3; if (b.y > canvas.height - 30) b.vy -= 3;
 
                 let overlap = (entity.r + b.r) - dist;
                 b.x += Math.cos(angle) * overlap; b.y += Math.sin(angle) * overlap;
@@ -803,7 +873,6 @@
                 players[0].x = ball.x - barrierDist; players[0].y = ball.y;
                 showMessage("PUNIZIONE " + botTeam.name.toUpperCase(), botTeam.main);
             }
-            
             for(let i=1; i<players.length; i++) { players[i].x = 100; players[i].y = 50 * i; }
             for(let i=1; i<bots.length; i++) { bots[i].x = canvas.width - 100; bots[i].y = 50 * i; }
         }
@@ -819,8 +888,7 @@
 
                 let relSpeed = Math.sqrt(Math.pow(p1.vx - p2.vx, 2) + Math.pow(p1.vy - p2.vy, 2));
                 if (relSpeed > 7.0 && !isFoulPaused && gameState === 'PLAYING') { 
-                    isFoulPaused = true;
-                    triggerShake(12);
+                    isFoulPaused = true; triggerShake(12);
                     createParticles(p1.x + dx/2, p1.y + dy/2, '#ffffff', 15, 1.5); 
                     showMessage("FALLO! 🟨", "from-yellow-200 via-yellow-400 to-orange-500");
                     let p1S = Math.sqrt(p1.vx*p1.vx + p1.vy*p1.vy); let p2S = Math.sqrt(p2.vx*p2.vx + p2.vy*p2.vy);
@@ -828,9 +896,7 @@
                     let foulerType = players.includes(fouler) ? 'PLAYER' : 'BOT';
                     
                     fouler.isFrozen = true;
-                    setTimeout(() => {
-                        isFoulPaused = false; fouler.isFrozen = false; setupFreeKick(foulerType);
-                    }, 2500);
+                    setTimeout(() => { isFoulPaused = false; fouler.isFrozen = false; setupFreeKick(foulerType); }, 2500);
                 }
                 let tempVx = p1.vx; let tempVy = p1.vy;
                 p1.vx = p2.vx * 0.8; p1.vy = p2.vy * 0.8; p2.vx = tempVx * 0.8; p2.vy = tempVy * 0.8;
@@ -859,15 +925,10 @@
                 
                 let dirX = dxToGoal / distToGoal; let dirY = dyToGoal / distToGoal;
                 let behindX = ball.x - dirX * 40; let behindY = ball.y - dirY * 40;
-                
                 let distToBehind = Math.sqrt(Math.pow(behindX - entity.x, 2) + Math.pow(behindY - entity.y, 2));
 
-                if (distToBehind < 45) {
-                    targetX = ball.x + dirX * 30; targetY = ball.y + dirY * 30;
-                    speedMult = 1.4; 
-                } else {
-                    targetX = behindX; targetY = behindY; speedMult = 1.25; 
-                }
+                if (distToBehind < 45) { targetX = ball.x + dirX * 30; targetY = ball.y + dirY * 30; speedMult = 1.4; } 
+                else { targetX = behindX; targetY = behindY; speedMult = 1.25; }
                 ignoreSeparation = true; 
             } else if (myRank === 1) {
                 targetX = ball.x + (allyGoalX - ball.x) * 0.4; targetY = ball.y + (goalY - ball.y) * 0.4; speedMult = 0.8;
@@ -879,10 +940,7 @@
             desiredX += (Math.random() - 0.5) * 2; desiredY += (Math.random() - 0.5) * 2;
 
             let dMag = Math.sqrt(desiredX*desiredX + desiredY*desiredY);
-            if (dMag > 0) {
-                desiredX = (desiredX / dMag) * entity.maxSpeed * speedMult;
-                desiredY = (desiredY / dMag) * entity.maxSpeed * speedMult;
-            }
+            if (dMag > 0) { desiredX = (desiredX / dMag) * entity.maxSpeed * speedMult; desiredY = (desiredY / dMag) * entity.maxSpeed * speedMult; }
 
             let sepX = 0, sepY = 0, neighborCount = 0; const avoidRadius = 45; 
             if (!ignoreSeparation) {
@@ -915,10 +973,28 @@
             if (eMag > entity.maxSpeed) { entity.vx = (entity.vx/eMag)*entity.maxSpeed; entity.vy = (entity.vy/eMag)*entity.maxSpeed; }
         }
 
+        function getInputs() {
+            let kbX = 0, kbY = 0;
+            if (keys['ArrowUp'] || keys['KeyW']) kbY -= 1;
+            if (keys['ArrowDown'] || keys['KeyS']) kbY += 1;
+            if (keys['ArrowLeft'] || keys['KeyA']) kbX -= 1;
+            if (keys['ArrowRight'] || keys['KeyD']) kbX += 1;
+            
+            // Unisci tastiera e joystick virtuale
+            let finalX = isJoystickActive ? inputX : kbX;
+            let finalY = isJoystickActive ? inputY : kbY;
+            
+            let mag = Math.sqrt(finalX*finalX + finalY*finalY);
+            if(mag > 1) { finalX /= mag; finalY /= mag; }
+
+            return { x: finalX, y: finalY, sprint: keys['Space'] || isSprintBtnPressed };
+        }
+
         function updatePhysics() {
             if (!gameActive || isPaused || (gameState !== 'PLAYING' && gameState !== 'FREE_KICK')) return;
 
-            let isSprinting = keys['Space'] && players[0].stamina > 0;
+            const inputs = getInputs();
+            let isSprinting = inputs.sprint && players[0].stamina > 0;
             let currentPMax = players[0].maxSpeed;
             
             if (!players[0].isFrozen && (gameState === 'PLAYING' || freeKickState === 'PLAYER')) {
@@ -930,10 +1006,8 @@
                     players[0].stamina += 0.5; if (players[0].stamina > 100) players[0].stamina = 100;
                 }
 
-                if (keys['ArrowUp'] || keys['KeyW']) players[0].vy -= speedStep;
-                if (keys['ArrowDown'] || keys['KeyS']) players[0].vy += speedStep;
-                if (keys['ArrowLeft'] || keys['KeyA']) players[0].vx -= speedStep;
-                if (keys['ArrowRight'] || keys['KeyD']) players[0].vx += speedStep;
+                players[0].vx += inputs.x * speedStep;
+                players[0].vy += inputs.y * speedStep;
             } else {
                 players[0].stamina += 0.5; if (players[0].stamina > 100) players[0].stamina = 100;
             }
@@ -975,15 +1049,12 @@
                     let d = Math.sqrt(Math.pow(ball.history[i].x - oldest.x, 2) + Math.pow(ball.history[i].y - oldest.y, 2));
                     if (d > 60) { isStuck = false; break; }
                 }
-                
                 let isNearWall = (ball.x < 50 || ball.x > canvas.width - 50 || ball.y < 50 || ball.y > canvas.height - 50);
-                
                 if (isStuck && isNearWall) {
                     ball.ghostMode = 45; 
                     let dirX = (canvas.width / 2) - ball.x; let dirY = (canvas.height / 2) - ball.y;
                     let mag = Math.sqrt(dirX*dirX + dirY*dirY);
-                    ball.vx = (dirX / mag) * 16; 
-                    ball.vy = (dirY / mag) * 16;
+                    ball.vx = (dirX / mag) * 16; ball.vy = (dirY / mag) * 16;
                     createParticles(ball.x, ball.y, '#22c55e', 30, 3); 
                     ball.history = []; 
                 }
@@ -1194,9 +1265,9 @@
             const endScreen = document.getElementById('gameOverScreen'); const endTitle = document.getElementById('gameOverTitle');
             endScreen.classList.remove('opacity-0', 'pointer-events-none'); endScreen.classList.add('opacity-100');
             document.getElementById('gameOverSub').innerText = `Risultato Finale: ${scoreLeft} - ${scoreRight}`;
-            if (scoreLeft > scoreRight) { endTitle.innerText = "VITTORIA!"; endTitle.className = "text-[6rem] font-black italic mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-500 drop-shadow-[0_0_30px_rgba(249,115,22,0.8)]"; } 
-            else if (scoreLeft < scoreRight) { endTitle.innerText = "SCONFITTA"; endTitle.className = "text-[6rem] font-black text-blue-500 italic mb-4 tracking-tighter drop-shadow-[0_0_30px_rgba(59,130,246,0.8)]"; } 
-            else { endTitle.innerText = "PAREGGIO"; endTitle.className = "text-[6rem] font-black text-zinc-400 italic mb-4 tracking-tighter drop-shadow-[0_0_30px_rgba(161,161,170,0.8)]"; }
+            if (scoreLeft > scoreRight) { endTitle.innerText = "VITTORIA!"; endTitle.className = "text-5xl md:text-[6rem] font-black italic mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-500 drop-shadow-[0_0_30px_rgba(249,115,22,0.8)]"; } 
+            else if (scoreLeft < scoreRight) { endTitle.innerText = "SCONFITTA"; endTitle.className = "text-5xl md:text-[6rem] font-black text-blue-500 italic mb-4 tracking-tighter drop-shadow-[0_0_30px_rgba(59,130,246,0.8)]"; } 
+            else { endTitle.innerText = "PAREGGIO"; endTitle.className = "text-5xl md:text-[6rem] font-black text-zinc-400 italic mb-4 tracking-tighter drop-shadow-[0_0_30px_rgba(161,161,170,0.8)]"; }
         }
 
         const timerInterval = setInterval(() => {
