@@ -209,10 +209,10 @@
         <div class="flex items-start justify-center gap-2 md:gap-4">
             
             <div class="flex flex-col gap-2 mt-3 skew-left items-end min-w-[30px]">
-                <div id="playerPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 flex items-center justify-center overflow-hidden origin-right opacity-0 w-0">
+                <div id="playerPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 flex items-center justify-center overflow-hidden origin-right opacity-100">
                     <span class="unskew-left text-[9px] md:text-xs font-black text-black whitespace-nowrap opacity-0 transition-opacity duration-300 leading-none"></span>
                 </div>
-                <div id="playerCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500 flex items-center justify-center overflow-hidden origin-right opacity-0 w-0">
+                <div id="playerCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500 flex items-center justify-center overflow-hidden origin-right opacity-100">
                     <span class="unskew-left text-[9px] md:text-xs font-black text-black whitespace-nowrap opacity-0 transition-opacity duration-300 leading-none"></span>
                 </div>
             </div>
@@ -247,10 +247,10 @@
             </div>
 
             <div class="flex flex-col gap-2 mt-3 skew-right items-start min-w-[30px]">
-                <div id="botPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 flex items-center justify-center overflow-hidden origin-left opacity-0 w-0">
+                <div id="botPresidentLine" class="w-2 md:w-3 h-5 md:h-6 bg-cyan-400 rounded-sm shadow-[0_0_10px_#22d3ee] transition-all duration-500 flex items-center justify-center overflow-hidden origin-left opacity-100">
                     <span class="unskew-right text-[9px] md:text-xs font-black text-black whitespace-nowrap opacity-0 transition-opacity duration-300 leading-none"></span>
                 </div>
-                <div id="botCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500 flex items-center justify-center overflow-hidden origin-left opacity-0 w-0">
+                <div id="botCardLine" class="w-2 md:w-3 h-5 md:h-6 bg-emerald-400 rounded-sm shadow-[0_0_10px_#34d399] transition-all duration-500 flex items-center justify-center overflow-hidden origin-left opacity-100">
                     <span class="unskew-right text-[9px] md:text-xs font-black text-black whitespace-nowrap opacity-0 transition-opacity duration-300 leading-none"></span>
                 </div>
             </div>
@@ -635,7 +635,7 @@
         function hideIndicator(elementId) { 
             const el = document.getElementById(elementId); 
             if (el) {
-                el.classList.remove('w-auto', 'px-2', 'md:px-3', 'opacity-100');
+                el.classList.remove('w-auto', 'px-2', 'md:px-3', 'opacity-100', 'w-2', 'md:w-3');
                 el.classList.add('w-0', 'opacity-0');
                 const span = el.querySelector('span');
                 if (span) {
@@ -919,7 +919,13 @@
         }
 
         function createEntity(startX, startY, teamInfo, isPlayer) {
-            return { x: startX, y: startY, vx: 0, vy: 0, r: 15, speed: isPlayer ? 0.7 : 0.55, maxSpeed: isPlayer ? 4.5 : 3.8, baseMaxSpeed: isPlayer ? 4.5 : 3.8, friction: 0.85, color: teamInfo.main, subColor: teamInfo.sub, textColor: teamInfo.text, number: Math.floor(Math.random() * 23) + 1, isFrozen: false, stamina: 100, isSprinting: false };
+            let assignedNumbers = isPlayer ? players.map(p => p.number) : bots.map(b => b.number);
+            let num;
+            do {
+                num = Math.floor(Math.random() * 23) + 1;
+            } while (assignedNumbers.includes(num));
+
+            return { x: startX, y: startY, vx: 0, vy: 0, r: 15, speed: isPlayer ? 0.7 : 0.55, maxSpeed: isPlayer ? 4.5 : 3.8, baseMaxSpeed: isPlayer ? 4.5 : 3.8, friction: 0.85, color: teamInfo.main, subColor: teamInfo.sub, textColor: teamInfo.text, number: num, isFrozen: false, stamina: 100, isSprinting: false };
         }
 
         function initCrowd() {
@@ -998,13 +1004,13 @@
             document.getElementById('cardBtn').classList.remove('opacity-40', 'cursor-not-allowed', 'grayscale'); document.getElementById('cardBtn').innerHTML = '<span class="relative z-10 flex items-center gap-1 md:gap-2">🃏 ATTIVA CARTA</span>';
             document.getElementById('presidentBtn').classList.remove('opacity-40', 'cursor-not-allowed', 'grayscale'); document.getElementById('presidentBtn').innerHTML = '<span class="relative z-10 flex items-center gap-1 md:gap-2">👑 <span class="hidden sm:inline">RIGORE</span> PRESID.</span>';
             
-            // Pulizia UI indicatori carte/rigori per evitare glitch grafici tra le partite
+            // Ripristina i quadratini laterali per far capire che le carte sono disponibili
             ['playerCardLine', 'playerPresidentLine', 'botCardLine', 'botPresidentLine'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.style.display = 'none';
-                    el.classList.remove('w-auto', 'px-2', 'md:px-3', 'opacity-100');
-                    el.classList.add('w-0', 'opacity-0');
+                    el.style.display = '';
+                    el.classList.remove('w-auto', 'px-2', 'md:px-3', 'w-0', 'opacity-0');
+                    el.classList.add('w-2', 'md:w-3', 'opacity-100');
                     const span = el.querySelector('span');
                     if (span) {
                         span.classList.remove('opacity-100');
@@ -1022,8 +1028,9 @@
             
             document.getElementById('cardSelectTitle').innerHTML = `VERSUS ${botTeam.name.toUpperCase()}<br><span class="text-sm md:text-2xl text-zinc-400 font-medium not-italic tracking-normal">Scegli la tua abilità per il match!</span>`;
 
-            players = [createEntity(150, canvas.height/2, myTeam, true)]; 
-            bots = [createEntity(canvas.width-150, canvas.height/2, botTeam, false)];
+            players = []; bots = [];
+            players.push(createEntity(150, canvas.height/2, myTeam, true));
+            bots.push(createEntity(canvas.width-150, canvas.height/2, botTeam, false));
             initCrowd();
             resetPositions();
 
@@ -1577,26 +1584,75 @@
             let pGoalTop = (canvas.height / 2) - (playerGoalHeight / 2); let pGoalBottom = (canvas.height / 2) + (playerGoalHeight / 2);
             let bGoalTop = (canvas.height / 2) - (botGoalHeight / 2); let bGoalBottom = (canvas.height / 2) + (botGoalHeight / 2);
 
+            // API Fisica: Collisione circolare esatta con i "Pali" della porta
+            const goalPosts = [
+                {x: margin, y: pGoalTop}, {x: margin, y: pGoalBottom},
+                {x: canvas.width - margin, y: bGoalTop}, {x: canvas.width - margin, y: bGoalBottom}
+            ];
+            for (let post of goalPosts) {
+                let dx = ball.x - post.x;
+                let dy = ball.y - post.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < ball.r) {
+                    let angle = Math.atan2(dy, dx);
+                    let overlap = ball.r - dist;
+                    ball.x += Math.cos(angle) * overlap;
+                    ball.y += Math.sin(angle) * overlap;
+                    // Calcolo vettore di rimbalzo realistico
+                    let nx = Math.cos(angle), ny = Math.sin(angle);
+                    let dot = ball.vx * nx + ball.vy * ny;
+                    ball.vx = (ball.vx - 2 * dot * nx) * 0.8;
+                    ball.vy = (ball.vy - 2 * dot * ny) * 0.8;
+                    createParticlesGame(post.x, post.y, '#eab308', 8);
+                    playSound('bounce');
+                }
+            }
+
+            // Collisione con i muri superiore e inferiore
             if (ball.y - ball.r < margin) { ball.y = margin + ball.r; ball.vy *= -0.8; createParticlesGame(ball.x, margin, '#ffffff', 5); playSound('bounce'); }
             if (ball.y + ball.r > canvas.height - margin) { ball.y = canvas.height - margin - ball.r; ball.vy *= -0.8; createParticlesGame(ball.x, canvas.height - margin, '#ffffff', 5); playSound('bounce'); }
 
+            // Collisioni angoli inclinati
             if ((ball.x - margin) + (ball.y - margin) < cornerSize + ball.r) { let t=ball.vx; ball.vx=Math.abs(ball.vy)*0.9; ball.vy=Math.abs(t)*0.9; ball.x+=2; ball.y+=2; createParticlesGame(margin,margin,'#eab308',5); playSound('bounce'); } 
             else if (((canvas.width - margin) - ball.x) + (ball.y - margin) < cornerSize + ball.r) { let t=ball.vx; ball.vx=-Math.abs(ball.vy)*0.9; ball.vy=Math.abs(t)*0.9; ball.x-=2; ball.y+=2; createParticlesGame(canvas.width - margin,margin,'#eab308',5); playSound('bounce'); } 
             else if ((ball.x - margin) + ((canvas.height - margin) - ball.y) < cornerSize + ball.r) { let t=ball.vx; ball.vx=Math.abs(ball.vy)*0.9; ball.vy=-Math.abs(t)*0.9; ball.x+=2; ball.y-=2; createParticlesGame(margin,canvas.height - margin,'#eab308',5); playSound('bounce'); } 
             else if (((canvas.width - margin) - ball.x) + ((canvas.height - margin) - ball.y) < cornerSize + ball.r) { let t=ball.vx; ball.vx=-Math.abs(ball.vy)*0.9; ball.vy=-Math.abs(t)*0.9; ball.x-=2; ball.y-=2; createParticlesGame(canvas.width - margin,canvas.height - margin,'#eab308',5); playSound('bounce'); }
 
+            // Muro Sinistro e Porta Bot
             if (ball.x - ball.r < margin) {
-                if (ball.y - ball.r > pGoalTop && ball.y + ball.r < pGoalBottom) {
-                    if (ball.x + ball.r < margin) scoreGoal('BOT'); 
+                if (ball.y > pGoalTop && ball.y < pGoalBottom) {
+                    // La palla è nello specchio della porta. Impediamo che esca lateralmente dalla rete.
+                    if (ball.x < margin) {
+                        if (ball.y - ball.r < pGoalTop) { ball.y = pGoalTop + ball.r; ball.vy *= -0.8; }
+                        if (ball.y + ball.r > pGoalBottom) { ball.y = pGoalBottom - ball.r; ball.vy *= -0.8; }
+                    }
+                    // Assegna gol solo se è entrata tutta completamente
+                    if (ball.x + ball.r < margin - 5) {
+                        scoreGoal('BOT'); 
+                    }
                 } else {
-                    ball.x = margin + ball.r; ball.vx *= -0.8; createParticlesGame(margin, ball.y, '#ffffff', 5); playSound('bounce');
+                    // Ha colpito il muro a fianco della porta
+                    ball.x = margin + ball.r; ball.vx *= -0.8; 
+                    createParticlesGame(margin, ball.y, '#ffffff', 5); playSound('bounce');
                 }
             }
+
+            // Muro Destro e Porta Giocatore
             if (ball.x + ball.r > canvas.width - margin) {
-                if (ball.y - ball.r > bGoalTop && ball.y + ball.r < bGoalBottom) {
-                    if (ball.x - ball.r > canvas.width - margin) scoreGoal('PLAYER'); 
+                if (ball.y > bGoalTop && ball.y < bGoalBottom) {
+                    // La palla è nello specchio della porta. Impediamo che esca lateralmente dalla rete.
+                    if (ball.x > canvas.width - margin) {
+                        if (ball.y - ball.r < bGoalTop) { ball.y = bGoalTop + ball.r; ball.vy *= -0.8; }
+                        if (ball.y + ball.r > bGoalBottom) { ball.y = bGoalBottom - ball.r; ball.vy *= -0.8; }
+                    }
+                    // Assegna gol solo se è entrata tutta completamente
+                    if (ball.x - ball.r > canvas.width - margin + 5) {
+                        scoreGoal('PLAYER'); 
+                    }
                 } else {
-                    ball.x = canvas.width - margin - ball.r; ball.vx *= -0.8; createParticlesGame(canvas.width - margin, ball.y, '#ffffff', 5); playSound('bounce');
+                    // Ha colpito il muro a fianco della porta
+                    ball.x = canvas.width - margin - ball.r; ball.vx *= -0.8; 
+                    createParticlesGame(canvas.width - margin, ball.y, '#ffffff', 5); playSound('bounce');
                 }
             }
         }
