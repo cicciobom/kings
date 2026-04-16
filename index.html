@@ -154,6 +154,14 @@
                 <div class="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </button>
         </div>
+        
+        <button id="continueBtn" style="display: none;" onclick="continueLeague();" class="mt-4 w-full max-w-2xl group relative px-4 py-3 md:px-8 md:py-4 font-black text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl text-sm md:text-xl hover:scale-105 transition-all duration-300 overflow-hidden shadow-[0_0_30px_rgba(147,51,234,0.4)] cursor-pointer ring-2 ring-zinc-950 mx-auto items-center justify-center">
+            <span class="relative z-10 flex items-center justify-center gap-2">
+                <span class="text-xl md:text-2xl">🔄</span>
+                <span id="continueBtnText">CONTINUA CAMPIONATO</span>
+            </span>
+            <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+        </button>
     </div>
 
     <!-- Schermata Selezione Squadra -->
@@ -348,6 +356,7 @@
         
         <div id="pauseMainButtons" class="flex flex-col gap-3 md:gap-6 w-56 md:w-80">
             <button onclick="togglePause()" class="px-4 py-2 md:px-8 md:py-5 font-black text-zinc-950 bg-gradient-to-r from-green-400 to-green-600 rounded-full text-base md:text-2xl hover:scale-105 transition-transform shadow-[0_0_15px_rgba(34,197,94,0.5)]">▶ RIPRENDI</button>
+            <button onclick="endMatchInstantly()" class="px-4 py-2 md:px-8 md:py-5 font-black text-white bg-orange-600 border-2 border-orange-500 rounded-full text-sm md:text-xl hover:bg-orange-500 transition-colors shadow-lg">⏭ FINE PARTITA</button>
             <button onclick="showSubMenu('controlsMenu')" class="px-4 py-2 md:px-8 md:py-5 font-black text-white bg-zinc-800 border-2 border-zinc-600 rounded-full text-sm md:text-xl hover:bg-zinc-700 transition-colors shadow-lg">🎮 COMANDI</button>
             <button onclick="showSubMenu('settingsMenu')" class="px-4 py-2 md:px-8 md:py-5 font-black text-white bg-zinc-800 border-2 border-zinc-600 rounded-full text-sm md:text-xl hover:bg-zinc-700 transition-colors shadow-lg">⚙️ IMPOSTAZIONI</button>
             <button onclick="location.reload()" class="px-4 py-2 md:px-8 md:py-5 font-black text-white bg-red-800 border-2 border-red-600 rounded-full text-sm md:text-xl hover:bg-red-700 transition-colors shadow-lg">⏹ ABBANDONA</button>
@@ -414,6 +423,53 @@
         let leagueData = { standings: {}, schedule: [], currentRound: 0 };
 
         const ball = { x: 480, y: 270, vx: 0, vy: 0, r: 10, baseR: 10, friction: 0.96, baseFriction: 0.96, color: '#ffffff', trail: [], ghostMode: 0, history: [] };
+
+        function saveLeagueProgress() {
+            if (gameMode === 'CAMPIONATO') {
+                if (leagueData.currentRound < leagueData.schedule.length) {
+                    localStorage.setItem('kl_league', JSON.stringify(leagueData));
+                    localStorage.setItem('kl_myTeam', myTeam.id);
+                } else {
+                    localStorage.removeItem('kl_league');
+                    localStorage.removeItem('kl_myTeam');
+                }
+            }
+        }
+
+        function checkSavedLeague() {
+            let savedLeague = localStorage.getItem('kl_league');
+            let savedTeam = localStorage.getItem('kl_myTeam');
+            if (savedLeague && savedTeam) {
+                try {
+                    let parsedLeague = JSON.parse(savedLeague);
+                    if (parsedLeague.currentRound < parsedLeague.schedule.length) {
+                        const btn = document.getElementById('continueBtn');
+                        btn.style.display = 'flex';
+                        document.getElementById('continueBtnText').innerText = `CONTINUA CAMPIONATO (G. ${parsedLeague.currentRound + 1})`;
+                    } else {
+                        localStorage.removeItem('kl_league');
+                        localStorage.removeItem('kl_myTeam');
+                    }
+                } catch(e) { console.error("Error loading save", e); }
+            }
+        }
+
+        function continueLeague() {
+            let savedLeague = localStorage.getItem('kl_league');
+            let savedTeam = localStorage.getItem('kl_myTeam');
+            if (savedLeague && savedTeam && teamsInfo[savedTeam]) {
+                playSound('ui');
+                leagueData = JSON.parse(savedLeague);
+                myTeam = teamsInfo[savedTeam];
+                gameMode = 'CAMPIONATO';
+                enterFullscreen();
+                document.getElementById('mainMenuScreen').classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    document.getElementById('mainMenuScreen').style.display = 'none';
+                    showStandings();
+                }, 700);
+            }
+        }
 
         const secretCards = ['GOL_DOPPIO', 'RIGORE', 'SOSPENSIONE', 'STAR_PLAYER', 'JOKER', 'SHOOTOUT', 'MURO', 'FULMINE', 'GHIACCIO', 'MAGNETE'];
         const cardData = {
@@ -613,7 +669,7 @@
         window.addEventListener('keydown', e => { 
             keys[e.code] = true; 
             keys[e.key] = true; 
-            if (e.key === 'Escape' && (gameState === 'PLAYING' || gameState === 'FREE_KICK')) togglePause(); 
+            if (e.key === 'Escape' && (gameState === 'PLAYING' || gameState === 'FREE_KICK' || gameState === 'SHOOTOUT')) togglePause(); 
         });
         window.addEventListener('keyup', e => { 
             keys[e.code] = false; 
@@ -839,6 +895,7 @@
             
             if (gameMode === 'CAMPIONATO') {
                 initLeague();
+                saveLeagueProgress();
                 setTimeout(() => {
                     document.getElementById('teamSelectionScreen').style.display = 'none';
                     showStandings();
@@ -965,7 +1022,7 @@
                 cardsContainer.innerHTML += `<div class="card-select" onclick="pickCard(this)"><div class="card-select-inner"><div class="card-back"><svg viewBox="0 0 24 24" class="w-12 h-12 md:w-20 md:h-20 text-[#22c55e] drop-shadow-[0_0_15px_rgba(34,197,94,0.8)]" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24.961zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.181c-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.14 11.28-.9 16.14 2.101.54.3.72 1.02.42 1.56-.24.54-.96.72-1.5.42z"/></svg></div><div class="card-front"></div></div></div>`;
             }
             
-            document.getElementById('cardSelectionScreen').style.display = ''; // <-- FIX FONDAMENTALE PER FAR RIAFFIORARE LE CARTE
+            document.getElementById('cardSelectionScreen').style.display = ''; 
             document.getElementById('cardSelectionScreen').classList.remove('hidden'); 
             setTimeout(() => document.getElementById('cardSelectionScreen').classList.remove('opacity-0'), 50); 
             gameState = 'CARD_SELECTION';
@@ -975,7 +1032,7 @@
 
         function pickCard(element) {
             if (gameState !== 'CARD_SELECTION') return;
-            gameState = 'CARD_ANIMATION'; // Previene doppi click accidentali
+            gameState = 'CARD_ANIMATION'; 
             
             playSound('ui'); playSound('magic');
             document.querySelectorAll('.card-select').forEach(c => c.style.pointerEvents = 'none');
@@ -1048,7 +1105,7 @@
                 if(timeLeft <= 10 && timeLeft > 0) { timerEl.classList.add('text-red-500', 'animate-pulse'); playSound('ui'); }
                 if(timeLeft <= 0) {
                     if (scoreLeft === scoreRight) { 
-                        gameState = 'SHOOTOUT'; 
+                        gameState = 'SHOOTOUT'; // Fix per il Golden Goal applicato nei check sottostanti
                         isGoldenGoalActive = true;
                         playSound('whistle'); showMessage("⚔️ GOLDEN GOAL!", "from-purple-400 via-fuchsia-500 to-pink-600", true); 
                         timerEl.innerText = "00:00"; timerEl.classList.remove('animate-pulse', 'text-red-500', 'text-orange-500'); timerEl.classList.add('text-purple-500'); 
@@ -1135,6 +1192,7 @@
                     if (!match.includes(myTeam.id)) simulateMatch(match[0], match[1]);
                 }
                 leagueData.currentRound++;
+                saveLeagueProgress();
 
                 const btn = document.getElementById('gameOverBtn');
                 if (leagueData.currentRound >= leagueData.schedule.length) {
@@ -1217,14 +1275,20 @@
 
         function togglePause() {
             playSound('ui');
-            if (gameState !== 'PLAYING' && gameState !== 'FREE_KICK') return;
+            if (gameState !== 'PLAYING' && gameState !== 'FREE_KICK' && gameState !== 'SHOOTOUT') return;
             isPaused = !isPaused; const pauseMenu = document.getElementById('pauseMenu'); const canvasCont = document.getElementById('canvasContainer');
             if (isPaused) { pauseMenu.classList.remove('hidden'); canvasCont.style.filter = "blur(5px) grayscale(50%)"; showSubMenu('main', false); } 
             else { pauseMenu.classList.add('hidden'); canvasCont.style.filter = "none"; }
         }
 
+        function endMatchInstantly() {
+            playSound('ui');
+            if (isPaused) togglePause();
+            triggerEndGame();
+        }
+
         function activateBotCard() {
-            if (!gameActive || gameState !== 'PLAYING' || botCardUsed) return;
+            if (!gameActive || (gameState !== 'PLAYING' && gameState !== 'SHOOTOUT') || botCardUsed) return;
             playSound('magic'); botCardUsed = true; const effect = botSecretCard; 
             showIndicator('botCardLine', cardData[effect].title);
             if (effect === 'GOL_DOPPIO') { showMessage("🤖 BOT: GOL DOPPIO!", "from-purple-500 via-purple-700 to-indigo-800"); botDoubleGoalTimer = 60; } 
@@ -1241,7 +1305,7 @@
 
         const cardBtnEl = document.getElementById('cardBtn');
         if(cardBtnEl) cardBtnEl.addEventListener('click', () => {
-            if (playerCardUsed || !gameActive || gameState !== 'PLAYING' || !mySecretCard || isPaused) return;
+            if (playerCardUsed || !gameActive || (gameState !== 'PLAYING' && gameState !== 'SHOOTOUT') || !mySecretCard || isPaused) return;
             playSound('magic'); playerCardUsed = true; document.getElementById('cardBtn').classList.add('opacity-40', 'cursor-not-allowed', 'grayscale'); document.getElementById('cardBtn').innerHTML = '<span class="relative z-10 flex items-center gap-2">❌ CARTA USATA</span>'; 
 
             const effect = mySecretCard; showIndicator('playerCardLine', cardData[effect].title);
@@ -1259,7 +1323,7 @@
 
         const presBtnEl = document.getElementById('presidentBtn');
         if(presBtnEl) presBtnEl.addEventListener('click', () => {
-            if (presidentPenaltyUsed || !gameActive || gameState !== 'PLAYING' || isPaused) return;
+            if (presidentPenaltyUsed || !gameActive || (gameState !== 'PLAYING' && gameState !== 'SHOOTOUT') || isPaused) return;
             playSound('magic'); presidentPenaltyUsed = true; document.getElementById('presidentBtn').classList.add('opacity-40', 'cursor-not-allowed', 'grayscale'); document.getElementById('presidentBtn').innerHTML = '<span class="relative z-10 flex items-center gap-2">❌ USATO</span>'; 
             showIndicator('playerPresidentLine', 'RIGORE PRESID.'); showMessage("👑 RIGORE PRESIDENZIALE!", "from-yellow-300 via-amber-400 to-orange-500", true); setupPenalty('PLAYER', false);
         });
@@ -1347,7 +1411,7 @@
                 if (isSameTeam) {
                     let tempVx = p1.vx, tempVy = p1.vy; p1.vx = p2.vx * 0.8; p1.vy = p2.vy * 0.8; p2.vx = tempVx * 0.8; p2.vy = tempVy * 0.8;
                 // FIX FALLI: Richiede velocità relativa altissima (>9.0) e un misero 10% di probabilità
-                } else if (relSpeed > 9.0 && Math.random() < 0.1 && !isFoulPaused && gameState === 'PLAYING') { 
+                } else if (relSpeed > 9.0 && Math.random() < 0.1 && !isFoulPaused && (gameState === 'PLAYING' || gameState === 'SHOOTOUT')) { 
                     isFoulPaused = true;
                     triggerShake(20); 
                     
@@ -1377,7 +1441,7 @@
         }
 
         function processAI(entity, isAlly) {
-            if (entity.isFrozen || (gameState !== 'PLAYING' && !(isAlly && freeKickState === 'PLAYER') && !(!isAlly && freeKickState === 'BOT'))) return;
+            if (entity.isFrozen || ((gameState !== 'PLAYING' && gameState !== 'SHOOTOUT') && !(isAlly && freeKickState === 'PLAYER') && !(!isAlly && freeKickState === 'BOT'))) return;
             if (!isAlly && botFrozenUntilKick) return;
 
             let myTeamArray = isAlly ? players : bots; let allyGoalX = isAlly ? 0 : canvas.width; let enemyGoalX = isAlly ? canvas.width : 0; let goalY = canvas.height / 2;
@@ -1435,13 +1499,13 @@
         }
 
         function updatePhysics() {
-            if (!gameActive || isPaused || (gameState !== 'PLAYING' && gameState !== 'FREE_KICK')) return;
+            if (!gameActive || isPaused || (gameState !== 'PLAYING' && gameState !== 'FREE_KICK' && gameState !== 'SHOOTOUT')) return;
             if (isFoulPaused) return; 
 
             if (playerSpeedTimer > 0) { players[0].stamina = 100; }
 
             const inputs = getInputs(); let isSprinting = inputs.sprint && players[0].stamina > 0; let currentPMax = players[0].baseMaxSpeed;
-            if (!players[0].isFrozen && (gameState === 'PLAYING' || freeKickState === 'PLAYER')) {
+            if (!players[0].isFrozen && (gameState === 'PLAYING' || gameState === 'SHOOTOUT' || freeKickState === 'PLAYER')) {
                 let speedStep = players[0].speed;
                 if (playerSpeedTimer > 0) { currentPMax *= 1.5; speedStep *= 1.5; isSprinting = true;}
                 if (isSprinting && (inputs.x !== 0 || inputs.y !== 0)) {
@@ -1680,6 +1744,8 @@
             render(); 
             if(gameActive) animFrameId = requestAnimationFrame(gameLoop); 
         }
+
+        checkSavedLeague();
 
     </script>
 </body>
