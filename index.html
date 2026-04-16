@@ -432,15 +432,15 @@
         const teamsInfo = {
             'APK': { id: 'APK', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/152293839.png', name: 'Alpak', main: '#ec4899', sub: '#18181b', text: '#ffffff' }, 
             'BRO': { id: 'BRO', img: 'https://kingsleague-cdn.kama.football/account/production/team/38880310.png', name: 'Bigbro', main: '#a855f7', sub: '#4c1d95', text: '#ffffff' }, 
-            'BMR': { id: 'BMR', img: 'https://kingsleague-cdn.kama.football/account/production/team/201241793.png', name: 'Boomers', main: '#eab308', sub: '#0ea5e9', text: '#ffffff' }, 
-            'CIR': { id: 'CIR', img: 'https://kingsleague-cdn.kama.football/account/production/team/443105506.png', name: 'Circus', main: '#ffffff', sub: '#7e22ce', text: '#ffffff' }, 
+            'BMR': { id: 'BMR', img: 'https://kingsleague-cdn.kama.football/account/production/team/201241793.png', name: 'Boomers', main: '#eab308', sub: '#0ea5e9', text: '#000000' }, 
+            'CIR': { id: 'CIR', img: 'https://kingsleague-cdn.kama.football/account/production/team/443105506.png', name: 'Circus', main: '#ffffff', sub: '#7e22ce', text: '#7e22ce' }, 
             'DPW': { id: 'DPW', img: 'https://kingsleague-cdn.kama.football/account/production/team/837946638.png', name: 'D-Power', main: '#ef4444', sub: '#f97316', text: '#ffffff' }, 
             'CSR': { id: 'CSR', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/639853075.png', name: 'Caesar', main: '#dc2626', sub: '#7f1d1d', text: '#ffffff' }, 
             'GR7': { id: 'GR7', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/783443232.png', name: 'Gear 7', main: '#71717a', sub: '#eab308', text: '#eab308' }, 
             'STL': { id: 'STL', img: 'https://kingsleague-cdn.kama.football/account/production/team/691246592.png', name: 'Stallions', main: '#1d4ed8', sub: '#facc15', text: '#ffffff' }, 
             'TRM': { id: 'TRM', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/245320259.png', name: 'TRM FC', main: '#3f3f46', sub: '#facc15', text: '#facc15' }, 
             'UND': { id: 'UND', img: 'https://kingsleague-cdn.kama.football/account/production/team/307265759.png', name: 'Underdogs', main: '#22c55e', sub: '#dc2626', text: '#ffffff' }, 
-            'ZEB': { id: 'ZEB', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/136124412.png', name: 'Zebras', main: '#e4e4e7', sub: '#000000', text: '#ffffff' }, 
+            'ZEB': { id: 'ZEB', img: 'https://kingsleague.pro/_ipx/s_256x256/kama/production/team/136124412.png', name: 'Zebras', main: '#e4e4e7', sub: '#000000', text: '#000000' }, 
             'ZTC': { id: 'ZTC', img: 'https://kingsleague-cdn.kama.football/account/production/team/763683878.png', name: 'Zeta FC', main: '#1e3a8a', sub: '#ffffff', text: '#ffffff' }  
         };
 
@@ -862,7 +862,7 @@
         }
 
         function createEntity(startX, startY, teamInfo, isPlayer) {
-            return { x: startX, y: startY, vx: 0, vy: 0, r: 15, speed: isPlayer ? 0.7 : 0.55, maxSpeed: isPlayer ? 4.5 : 3.8, baseMaxSpeed: isPlayer ? 4.5 : 3.8, friction: 0.85, color: teamInfo.main, subColor: teamInfo.sub, isFrozen: false, stamina: 100, isSprinting: false };
+            return { x: startX, y: startY, vx: 0, vy: 0, r: 15, speed: isPlayer ? 0.7 : 0.55, maxSpeed: isPlayer ? 4.5 : 3.8, baseMaxSpeed: isPlayer ? 4.5 : 3.8, friction: 0.85, color: teamInfo.main, subColor: teamInfo.sub, textColor: teamInfo.text, number: Math.floor(Math.random() * 23) + 1, isFrozen: false, stamina: 100, isSprinting: false };
         }
 
         function initCrowd() {
@@ -1552,6 +1552,12 @@
             ctx.lineWidth = 3; ctx.strokeStyle = entity.subColor; ctx.stroke();
             ctx.beginPath(); ctx.arc(entity.x, entity.y, entity.r - 4, 0, Math.PI * 2); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke(); ctx.globalAlpha = 1.0;
             
+            ctx.fillStyle = entity.textColor;
+            ctx.font = "bold 13px 'Segoe UI', Arial, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(entity.number, entity.x, entity.y + 1);
+
             if ((isPlayer && playerMagnetTimer > 0 && isMainUser) || (!isPlayer && botMagnetTimer > 0 && entity === bots[0])) {
                 ctx.beginPath(); ctx.arc(entity.x, entity.y, entity.r + 15, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(156, 163, 175, 0.8)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
             }
