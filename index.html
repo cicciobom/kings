@@ -317,55 +317,55 @@
     <div id="gameOverScreen" class="absolute inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-all duration-1000 px-4 text-center overflow-hidden">
         <div id="gameOverBg" class="absolute inset-0 opacity-20 bg-gradient-to-t from-transparent to-transparent"></div>
         <div id="gameOverContent" class="relative z-10 flex flex-col items-center transform scale-90 transition-transform duration-1000 w-full max-w-2xl">
-            <h2 id="gameOverLabel" class="text-2xl md:text-4xl font-bold text-zinc-400 mb-2 uppercase tracking-[0.3em]">Fine Partita</h2>
-            <h1 id="gameOverTitle" class="text-5xl sm:text-6xl md:text-[7rem] font-black text-white italic mb-6 tracking-tighter uppercase leading-none drop-shadow-2xl">TRIPLICE FISCHIO</h1>
+            <h2 id="gameOverLabel" class="text-xl md:text-2xl font-bold text-zinc-400 mb-1 uppercase tracking-[0.3em]">Fine Partita</h2>
+            <h1 id="gameOverTitle" class="text-4xl sm:text-5xl md:text-6xl font-black text-white italic mb-4 tracking-tighter uppercase leading-none drop-shadow-2xl">TRIPLICE FISCHIO</h1>
             
-            <div class="flex items-center gap-6 md:gap-12 mb-4 md:mb-6 bg-black/60 p-6 md:p-8 rounded-3xl border border-zinc-800 backdrop-blur-md shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-                <div class="flex flex-col items-center w-20 md:w-32">
-                    <img id="endPlayerLogo" src="" class="w-16 h-16 md:w-24 md:h-24 object-contain mb-3 drop-shadow-lg">
-                    <span id="endPlayerName" class="text-xs md:text-xl font-bold text-white uppercase tracking-wider text-center">TU</span>
+            <div class="flex items-center gap-4 md:gap-8 mb-4 bg-black/60 p-4 md:p-6 rounded-3xl border border-zinc-800 backdrop-blur-md shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+                <div class="flex flex-col items-center w-16 md:w-24">
+                    <img id="endPlayerLogo" src="" class="w-12 h-12 md:w-20 md:h-20 object-contain mb-2 drop-shadow-lg">
+                    <span id="endPlayerName" class="text-[10px] md:text-sm font-bold text-white uppercase tracking-wider text-center">TU</span>
                 </div>
-                <div class="text-5xl md:text-7xl font-black text-white tracking-widest tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.5)] bg-zinc-900 px-6 py-2 rounded-2xl border border-zinc-700">
+                <div class="text-4xl md:text-6xl font-black text-white tracking-widest tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.5)] bg-zinc-900 px-4 py-2 rounded-2xl border border-zinc-700">
                     <span id="endScoreLeft">0</span> - <span id="endScoreRight">0</span>
                 </div>
-                <div class="flex flex-col items-center w-20 md:w-32">
-                    <img id="endBotLogo" src="" class="w-16 h-16 md:w-24 md:h-24 object-contain mb-3 drop-shadow-lg opacity-80">
-                    <span id="endBotName" class="text-xs md:text-xl font-bold text-zinc-400 uppercase tracking-wider text-center">BOT</span>
+                <div class="flex flex-col items-center w-16 md:w-24">
+                    <img id="endBotLogo" src="" class="w-12 h-12 md:w-20 md:h-20 object-contain mb-2 drop-shadow-lg opacity-80">
+                    <span id="endBotName" class="text-[10px] md:text-sm font-bold text-zinc-400 uppercase tracking-wider text-center">BOT</span>
                 </div>
             </div>
 
             <!-- Nuova Sezione Statistiche -->
-            <div class="w-full max-w-lg bg-black/60 rounded-2xl p-4 mb-8 border border-zinc-800 text-sm md:text-base shadow-lg">
+            <div class="w-full max-w-md bg-black/60 rounded-2xl p-3 md:p-5 mb-6 border border-zinc-800 text-xs md:text-sm shadow-lg mx-auto">
                 <div class="flex justify-between mb-3 pb-2 border-b border-zinc-700">
-                    <span class="w-1/3 text-center text-white font-black text-lg" id="statPlayerT">TU</span>
-                    <span class="w-1/3 text-center text-zinc-400 font-bold text-xs mt-1 tracking-widest">STATISTICHE</span>
-                    <span class="w-1/3 text-center text-zinc-400 font-black text-lg" id="statBotT">BOT</span>
+                    <span class="w-1/3 text-center text-white font-black text-base md:text-lg" id="statPlayerT">TU</span>
+                    <span class="w-1/3 text-center text-zinc-400 font-bold text-[10px] md:text-xs mt-1 tracking-widest">STATISTICHE</span>
+                    <span class="w-1/3 text-center text-zinc-400 font-black text-base md:text-lg" id="statBotT">BOT</span>
                 </div>
                 <div class="flex justify-between mb-2">
                     <span class="w-1/3 text-center text-white font-bold" id="statPossPlayer">50%</span>
-                    <span class="w-1/3 text-center text-zinc-500 text-[10px] md:text-xs mt-1 font-bold tracking-wider">POSSESSO</span>
+                    <span class="w-1/3 text-center text-zinc-500 text-[9px] md:text-[10px] mt-1 font-bold tracking-wider">POSSESSO</span>
                     <span class="w-1/3 text-center text-zinc-400 font-bold" id="statPossBot">50%</span>
                 </div>
                 <div class="flex justify-between mb-2">
                     <span class="w-1/3 text-center text-white font-bold" id="statTouchesPlayer">0</span>
-                    <span class="w-1/3 text-center text-zinc-500 text-[10px] md:text-xs mt-1 font-bold tracking-wider">TOCCHI</span>
+                    <span class="w-1/3 text-center text-zinc-500 text-[9px] md:text-[10px] mt-1 font-bold tracking-wider">TOCCHI</span>
                     <span class="w-1/3 text-center text-zinc-400 font-bold" id="statTouchesBot">0</span>
                 </div>
                 <div class="flex justify-between mb-2">
                     <span class="w-1/3 text-center text-white font-bold" id="statShotsPlayer">0</span>
-                    <span class="w-1/3 text-center text-zinc-500 text-[10px] md:text-xs mt-1 font-bold tracking-wider">TIRI FALLITI</span>
+                    <span class="w-1/3 text-center text-zinc-500 text-[9px] md:text-[10px] mt-1 font-bold tracking-wider">TIRI FALLITI</span>
                     <span class="w-1/3 text-center text-zinc-400 font-bold" id="statShotsBot">0</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="w-1/3 text-center text-white font-bold" id="statTacklesPlayer">0</span>
-                    <span class="w-1/3 text-center text-zinc-500 text-[10px] md:text-xs mt-1 font-bold tracking-wider">CONTRASTI</span>
+                    <span class="w-1/3 text-center text-zinc-500 text-[9px] md:text-[10px] mt-1 font-bold tracking-wider">CONTRASTI</span>
                     <span class="w-1/3 text-center text-zinc-400 font-bold" id="statTacklesBot">0</span>
                 </div>
             </div>
 
-            <p id="gameOverSub" class="text-lg md:text-2xl text-zinc-300 mb-6 font-medium max-w-lg leading-snug drop-shadow-md"></p>
+            <p id="gameOverSub" class="text-sm md:text-xl text-zinc-300 mb-6 font-medium max-w-lg leading-snug drop-shadow-md mx-auto"></p>
             
-            <button id="gameOverBtn" onclick="handleGameOverClick()" class="group relative px-8 py-4 md:px-12 md:py-5 font-black text-zinc-950 bg-white rounded-full text-xl md:text-2xl hover:scale-110 transition-all duration-300 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.3)] cursor-pointer ring-4 ring-zinc-500/50 hover:ring-white">
+            <button id="gameOverBtn" onclick="handleGameOverClick()" class="group relative px-6 py-3 md:px-10 md:py-4 font-black text-zinc-950 bg-white rounded-full text-lg md:text-xl hover:scale-110 transition-all duration-300 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.3)] cursor-pointer ring-4 ring-zinc-500/50 hover:ring-white">
                 <span class="relative z-10 flex items-center gap-3">🔄 GIOCA DI NUOVO</span>
                 <div class="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </button>
@@ -1334,17 +1334,17 @@
 
             if (scoreLeft > scoreRight) { 
                 endTitle.innerText = "VITTORIA!"; 
-                endTitle.className = "text-5xl sm:text-6xl md:text-[7rem] font-black italic mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-500 to-red-600 drop-shadow-[0_10px_30px_rgba(249,115,22,0.8)] uppercase leading-none"; 
+                endTitle.className = "text-4xl sm:text-5xl md:text-[5rem] font-black italic mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-500 to-red-600 drop-shadow-[0_10px_30px_rgba(249,115,22,0.8)] uppercase leading-none"; 
                 endBg.className = "absolute inset-0 opacity-30 bg-gradient-to-t from-orange-900 to-transparent";
                 endSub.innerText = isGoldenGoalActive ? "Vittoria al cardiopalma nel Golden Goal!" : "Hai dominato l'arena. Sei il vero Re!";
             } else if (scoreLeft < scoreRight) { 
                 endTitle.innerText = "SCONFITTA"; 
-                endTitle.className = "text-5xl sm:text-6xl md:text-[7rem] font-black italic mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-slate-400 via-zinc-600 to-zinc-800 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] uppercase leading-none"; 
+                endTitle.className = "text-4xl sm:text-5xl md:text-[5rem] font-black italic mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-slate-400 via-zinc-600 to-zinc-800 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] uppercase leading-none"; 
                 endBg.className = "absolute inset-0 opacity-40 bg-gradient-to-t from-red-950 to-transparent";
                 endSub.innerText = isGoldenGoalActive ? "Sconfitta bruciante nel Golden Goal." : "Il bot ti ha superato. Allenati e torna più forte.";
             } else { 
                 endTitle.innerText = "PAREGGIO"; 
-                endTitle.className = "text-5xl sm:text-6xl md:text-[7rem] font-black italic mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-blue-300 via-blue-500 to-indigo-700 drop-shadow-[0_10px_30px_rgba(59,130,246,0.8)] uppercase leading-none"; 
+                endTitle.className = "text-4xl sm:text-5xl md:text-[5rem] font-black italic mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-blue-300 via-blue-500 to-indigo-700 drop-shadow-[0_10px_30px_rgba(59,130,246,0.8)] uppercase leading-none"; 
                 endBg.className = "absolute inset-0 opacity-20 bg-gradient-to-t from-blue-900 to-transparent";
                 endSub.innerText = "Una battaglia ad armi pari.";
             }
