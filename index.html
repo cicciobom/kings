@@ -320,7 +320,7 @@
             <h2 id="gameOverLabel" class="text-2xl md:text-4xl font-bold text-zinc-400 mb-2 uppercase tracking-[0.3em]">Fine Partita</h2>
             <h1 id="gameOverTitle" class="text-5xl sm:text-6xl md:text-[7rem] font-black text-white italic mb-6 tracking-tighter uppercase leading-none drop-shadow-2xl">TRIPLICE FISCHIO</h1>
             
-            <div class="flex items-center gap-6 md:gap-12 mb-8 md:mb-10 bg-black/60 p-6 md:p-8 rounded-3xl border border-zinc-800 backdrop-blur-md shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+            <div class="flex items-center gap-6 md:gap-12 mb-4 md:mb-6 bg-black/60 p-6 md:p-8 rounded-3xl border border-zinc-800 backdrop-blur-md shadow-[0_0_50px_rgba(0,0,0,0.8)]">
                 <div class="flex flex-col items-center w-20 md:w-32">
                     <img id="endPlayerLogo" src="" class="w-16 h-16 md:w-24 md:h-24 object-contain mb-3 drop-shadow-lg">
                     <span id="endPlayerName" class="text-xs md:text-xl font-bold text-white uppercase tracking-wider text-center">TU</span>
@@ -334,7 +334,36 @@
                 </div>
             </div>
 
-            <p id="gameOverSub" class="text-lg md:text-2xl text-zinc-300 mb-10 font-medium max-w-lg leading-snug drop-shadow-md"></p>
+            <!-- Nuova Sezione Statistiche -->
+            <div class="w-full max-w-lg bg-black/60 rounded-2xl p-4 mb-8 border border-zinc-800 text-sm md:text-base shadow-lg">
+                <div class="flex justify-between mb-3 pb-2 border-b border-zinc-700">
+                    <span class="w-1/3 text-center text-white font-black text-lg" id="statPlayerT">TU</span>
+                    <span class="w-1/3 text-center text-zinc-400 font-bold text-xs mt-1 tracking-widest">STATISTICHE</span>
+                    <span class="w-1/3 text-center text-zinc-400 font-black text-lg" id="statBotT">BOT</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="w-1/3 text-center text-white font-bold" id="statPossPlayer">50%</span>
+                    <span class="w-1/3 text-center text-zinc-500 text-[10px] md:text-xs mt-1 font-bold tracking-wider">POSSESSO</span>
+                    <span class="w-1/3 text-center text-zinc-400 font-bold" id="statPossBot">50%</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="w-1/3 text-center text-white font-bold" id="statTouchesPlayer">0</span>
+                    <span class="w-1/3 text-center text-zinc-500 text-[10px] md:text-xs mt-1 font-bold tracking-wider">TOCCHI</span>
+                    <span class="w-1/3 text-center text-zinc-400 font-bold" id="statTouchesBot">0</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="w-1/3 text-center text-white font-bold" id="statShotsPlayer">0</span>
+                    <span class="w-1/3 text-center text-zinc-500 text-[10px] md:text-xs mt-1 font-bold tracking-wider">TIRI FALLITI</span>
+                    <span class="w-1/3 text-center text-zinc-400 font-bold" id="statShotsBot">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="w-1/3 text-center text-white font-bold" id="statTacklesPlayer">0</span>
+                    <span class="w-1/3 text-center text-zinc-500 text-[10px] md:text-xs mt-1 font-bold tracking-wider">CONTRASTI</span>
+                    <span class="w-1/3 text-center text-zinc-400 font-bold" id="statTacklesBot">0</span>
+                </div>
+            </div>
+
+            <p id="gameOverSub" class="text-lg md:text-2xl text-zinc-300 mb-6 font-medium max-w-lg leading-snug drop-shadow-md"></p>
             
             <button id="gameOverBtn" onclick="handleGameOverClick()" class="group relative px-8 py-4 md:px-12 md:py-5 font-black text-zinc-950 bg-white rounded-full text-xl md:text-2xl hover:scale-110 transition-all duration-300 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.3)] cursor-pointer ring-4 ring-zinc-500/50 hover:ring-white">
                 <span class="relative z-10 flex items-center gap-3">🔄 GIOCA DI NUOVO</span>
@@ -412,7 +441,7 @@
         let timerInterval = null;
         let foulTimeoutId = null;
         let botCardTimeoutId = null;
-        let animFrameId = null; // Aggiunto per fixare il raddoppio della velocità (Bug Campionato)
+        let animFrameId = null; 
         
         let globalMultiplier = 1; let isZeroGravity = false; 
         let goalWidth = 15, margin = 40, cornerSize = 40, maxPlayers = 1; 
@@ -421,8 +450,13 @@
         let fans = [], cheerTimer = 0, cheeringTeam = null;
 
         let leagueData = { standings: {}, schedule: [], currentRound: 0 };
+        let selectionStep = 1; 
 
-        const ball = { x: 480, y: 270, vx: 0, vy: 0, r: 10, baseR: 10, friction: 0.96, baseFriction: 0.96, color: '#ffffff', trail: [], ghostMode: 0, history: [] };
+        let availableDiceEvents = [];
+        let matchStats = { player: { touches: 0, missedShots: 0, tackles: 0 }, bot: { touches: 0, missedShots: 0, tackles: 0 } };
+        let lastTouchedBy = null;
+
+        const ball = { x: 480, y: 270, vx: 0, vy: 0, r: 10, baseR: 10, friction: 0.96, baseFriction: 0.96, color: '#ffffff', trail: [], ghostMode: 0, history: [], touchCooldown: 0 };
 
         function saveLeagueProgress() {
             if (gameMode === 'CAMPIONATO') {
@@ -858,12 +892,14 @@
         function setGameMode(mode) {
             playSound('ui');
             gameMode = mode;
+            selectionStep = 1;
             enterFullscreen(); 
             document.getElementById('mainMenuScreen').classList.add('opacity-0', 'pointer-events-none');
             setTimeout(() => { 
                 document.getElementById('mainMenuScreen').style.display = 'none'; 
                 document.getElementById('teamSelectionScreen').classList.remove('hidden'); 
                 document.getElementById('teamSelectTitle').innerText = mode === 'CAMPIONATO' ? "SCEGLI IL TUO CLUB" : "SCEGLI LA TUA FRANCHIGIA";
+                document.querySelector('#teamSelectionScreen p').innerText = "Seleziona il team per scendere in campo";
                 setTimeout(() => document.getElementById('teamSelectionScreen').classList.remove('opacity-0'), 50);
                 initTeamSelection(); 
             }, 700);
@@ -871,11 +907,14 @@
 
         function goToTeamSelection() {
             initAudio(); 
+            selectionStep = 1;
             enterFullscreen(); 
             document.getElementById('mainMenuScreen').classList.add('opacity-0', 'pointer-events-none');
             setTimeout(() => { 
                 document.getElementById('mainMenuScreen').style.display = 'none'; 
                 document.getElementById('teamSelectionScreen').classList.remove('hidden'); 
+                document.getElementById('teamSelectTitle').innerText = "SCEGLI LA TUA FRANCHIGIA";
+                document.querySelector('#teamSelectionScreen p').innerText = "Seleziona il team per scendere in campo";
                 initTeamSelection(); 
             }, 700);
         }
@@ -883,6 +922,8 @@
         function initTeamSelection() {
             const grid = document.getElementById('teamGrid'); grid.innerHTML = '';
             Object.values(teamsInfo).forEach(team => {
+                if (selectionStep === 2 && myTeam && team.id === myTeam.id) return; 
+                
                 const badge = document.createElement('div'); badge.className = 'w-full aspect-[4/5] sm:aspect-square md:aspect-[4/5] team-badge shadow-xl md:shadow-2xl mx-auto'; badge.style.borderBottomColor = team.main;
                 let iconHtml = team.img ? `<img src="${team.img}" alt="${team.name}" class="team-badge-img drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" onerror="this.outerHTML='<div class=\\'team-badge-icon\\'>${team.icon || '🛡️'}</div>'">` : `<div class="team-badge-icon">${team.icon}</div>`;
                 badge.innerHTML = `${iconHtml}<span class="team-badge-text text-white text-center">${team.id}</span>`; badge.onclick = () => selectTeam(team.id); grid.appendChild(badge);
@@ -890,10 +931,11 @@
         }
 
         function selectTeam(teamId) {
-            playSound('ui'); myTeam = teamsInfo[teamId];
-            document.getElementById('teamSelectionScreen').classList.add('opacity-0');
+            playSound('ui'); 
             
             if (gameMode === 'CAMPIONATO') {
+                myTeam = teamsInfo[teamId];
+                document.getElementById('teamSelectionScreen').classList.add('opacity-0');
                 initLeague();
                 saveLeagueProgress();
                 setTimeout(() => {
@@ -901,12 +943,24 @@
                     showStandings();
                 }, 700);
             } else {
-                const availableBots = Object.keys(teamsInfo).filter(id => id !== teamId); 
-                botTeam = teamsInfo[availableBots[Math.floor(Math.random() * availableBots.length)]];
-                setTimeout(() => {
-                    document.getElementById('teamSelectionScreen').style.display = 'none';
-                    startMatchPrep();
-                }, 700);
+                if (selectionStep === 1) {
+                    myTeam = teamsInfo[teamId];
+                    selectionStep = 2;
+                    document.getElementById('teamSelectionScreen').classList.add('opacity-0');
+                    setTimeout(() => {
+                        document.getElementById('teamSelectTitle').innerText = "SCEGLI L'AVVERSARIO";
+                        document.querySelector('#teamSelectionScreen p').innerText = "Seleziona chi vuoi sfidare";
+                        initTeamSelection();
+                        document.getElementById('teamSelectionScreen').classList.remove('opacity-0');
+                    }, 500);
+                } else {
+                    botTeam = teamsInfo[teamId];
+                    document.getElementById('teamSelectionScreen').classList.add('opacity-0');
+                    setTimeout(() => {
+                        document.getElementById('teamSelectionScreen').style.display = 'none';
+                        startMatchPrep();
+                    }, 700);
+                }
             }
         }
 
@@ -925,7 +979,7 @@
                 num = Math.floor(Math.random() * 23) + 1;
             } while (assignedNumbers.includes(num));
 
-            return { x: startX, y: startY, vx: 0, vy: 0, r: 15, speed: isPlayer ? 0.7 : 0.55, maxSpeed: isPlayer ? 4.5 : 3.8, baseMaxSpeed: isPlayer ? 4.5 : 3.8, friction: 0.85, color: teamInfo.main, subColor: teamInfo.sub, textColor: teamInfo.text, number: num, isFrozen: false, stamina: 100, isSprinting: false };
+            return { x: startX, y: startY, vx: 0, vy: 0, r: 15, speed: isPlayer ? 0.7 : 0.55, maxSpeed: isPlayer ? 4.5 : 3.8, baseMaxSpeed: isPlayer ? 4.5 : 3.8, friction: 0.85, color: teamInfo.main, subColor: teamInfo.sub, textColor: teamInfo.text, number: num, isFrozen: false, stamina: 100, isSprinting: false, tackleCooldown: 0 };
         }
 
         function initCrowd() {
@@ -961,13 +1015,11 @@
         }
 
         function startMatchPrep() {
-            // STOP di ogni loop rimasto attivo - Fix per la velocità impazzita
             if (animFrameId) {
                 cancelAnimationFrame(animFrameId);
                 animFrameId = null;
             }
 
-            // Ripristino Totale Variabili (Bug Campionato)
             scoreLeft = 0; scoreRight = 0; timeLeft = 180; isGoldenGoalActive = false; globalMultiplier = 1; isZeroGravity = false;
             playerGoalHeight = 200; botGoalHeight = 200; maxPlayers = 1;
             playerDoubleGoalTimer = 0; botDoubleGoalTimer = 0; playerStarActive = false; botStarActive = false;
@@ -976,6 +1028,11 @@
             playerGhiaccioTimer = 0; botGhiaccioTimer = 0;
             cheeringTeam = null; cheerTimer = 0;
             isPaused = false;
+            
+            // Inizializzazione Statistiche e Dadi Unici
+            availableDiceEvents = ['PORTE GIGANTI', '1 VS 1', 'PALLA INFUOCATA', 'GRAVITÀ ZERO', 'GOL TRIPLO', 'PALLA GIGANTE'];
+            matchStats = { player: { touches: 0, missedShots: 0, tackles: 0 }, bot: { touches: 0, missedShots: 0, tackles: 0 } };
+            lastTouchedBy = null;
             
             if (foulTimeoutId) clearTimeout(foulTimeoutId);
             if (botCardTimeoutId) clearTimeout(botCardTimeoutId); 
@@ -993,6 +1050,7 @@
             ball.ghostMode = 0;
             ball.history = [];
             ball.trail = [];
+            ball.touchCooldown = 0;
 
             document.getElementById('scoreLeft').innerText = 0; document.getElementById('scoreRight').innerText = 0;
             document.getElementById('timer').innerText = "03:00";
@@ -1004,7 +1062,6 @@
             document.getElementById('cardBtn').classList.remove('opacity-40', 'cursor-not-allowed', 'grayscale'); document.getElementById('cardBtn').innerHTML = '<span class="relative z-10 flex items-center gap-1 md:gap-2">🃏 ATTIVA CARTA</span>';
             document.getElementById('presidentBtn').classList.remove('opacity-40', 'cursor-not-allowed', 'grayscale'); document.getElementById('presidentBtn').innerHTML = '<span class="relative z-10 flex items-center gap-1 md:gap-2">👑 <span class="hidden sm:inline">RIGORE</span> PRESID.</span>';
             
-            // Ripristina i quadratini laterali per far capire che le carte sono disponibili
             ['playerCardLine', 'playerPresidentLine', 'botCardLine', 'botPresidentLine'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -1069,7 +1126,7 @@
                 setTimeout(() => { 
                     document.getElementById('cardSelectionScreen').style.display = 'none'; 
                     gameState = 'PLAYING'; gameActive = true; startCrowd(); gameLoop(); startTimer();
-                    playSound('whistle'); showMessage("1 VS 1", "from-blue-400 via-cyan-300 to-emerald-400", true); 
+                    playSound('whistle'); showMessage("1 VS 1", "from-red-500 via-rose-500 to-red-600", true); 
                 }, 700);
             }, 3000);
         }
@@ -1079,13 +1136,11 @@
             timerInterval = setInterval(() => {
                 if(!gameActive || isPaused || (gameState !== 'PLAYING' && gameState !== 'SHOOTOUT')) return;
 
-                // Gestione progressiva Giocatori in campo
                 if (gameState === 'PLAYING') {
-                    if (timeLeft === 170 && maxPlayers < 2) { maxPlayers = 2; players.push(createEntity(100, canvas.height/3, myTeam, true)); bots.push(createEntity(canvas.width-100, canvas.height/3, botTeam, false)); showMessage("2 VS 2!", "from-blue-400 via-cyan-300 to-emerald-400", true); playSound('magic'); }
-                    if (timeLeft === 160 && maxPlayers < 3) { maxPlayers = 3; players.push(createEntity(100, canvas.height*0.66, myTeam, true)); bots.push(createEntity(canvas.width-100, canvas.height*0.66, botTeam, false)); showMessage("3 VS 3!", "from-blue-400 via-cyan-300 to-emerald-400", true); playSound('magic'); }
+                    if (timeLeft === 170 && maxPlayers < 2) { maxPlayers = 2; players.push(createEntity(100, canvas.height/3, myTeam, true)); bots.push(createEntity(canvas.width-100, canvas.height/3, botTeam, false)); showMessage("2 VS 2!", "from-blue-500 via-cyan-500 to-blue-600", true); playSound('magic'); }
+                    if (timeLeft === 160 && maxPlayers < 3) { maxPlayers = 3; players.push(createEntity(100, canvas.height*0.66, myTeam, true)); bots.push(createEntity(canvas.width-100, canvas.height*0.66, botTeam, false)); showMessage("3 VS 3!", "from-red-500 via-purple-600 to-blue-600", true); playSound('magic'); }
                 }
 
-                // Aggiornamento Indicatori Carte (Anche durante lo Shootout)
                 let pCardText = null;
                 if (playerDoubleGoalTimer > 0) { playerDoubleGoalTimer--; pCardText = `GOL x2: ${playerDoubleGoalTimer}s`; if(playerDoubleGoalTimer===0) hideIndicator('playerCardLine'); }
                 else if (playerMuroTimer > 0) { playerMuroTimer--; pCardText = `MURO: ${playerMuroTimer}s`; if(playerMuroTimer===0) { playerGoalHeight = 200; hideIndicator('playerCardLine'); } }
@@ -1104,26 +1159,29 @@
                 else if (botGhiaccioTimer > 0) { botGhiaccioTimer--; bCardText = `GHIACCIO: ${botGhiaccioTimer}s`; if(botGhiaccioTimer===0) { players.forEach(p => p.isFrozen = false); hideIndicator('botCardLine'); } }
                 if (bCardText) showIndicator('botCardLine', bCardText);
 
-                // Gestione del tempo (Solo durante PARTITA)
                 if (gameState === 'PLAYING') {
                     timeLeft--;
                     let m = Math.floor(timeLeft / 60).toString().padStart(2, '0'); let s = (timeLeft % 60).toString().padStart(2, '0'); const timerEl = document.getElementById('timer'); timerEl.innerText = `${m}:${s}`;
 
                     if (timeLeft === 60 || timeLeft === 30) {
                         playSound('magic');
-                        const diceEvents = ['PORTE GIGANTI', '1 VS 1', 'PALLA INFUOCATA', 'GRAVITÀ ZERO', 'GOL TRIPLO', 'PALLA GIGANTE'];
-                        const event = diceEvents[Math.floor(Math.random() * diceEvents.length)];
-                        showMessage("🎲 DADO: " + event, "from-pink-500 via-purple-500 to-cyan-500", true);
-                        timerEl.classList.add('text-orange-500', 'animate-pulse');
-                        
-                        ball.r = ball.baseR;
-                        
-                        if (event === 'PORTE GIGANTI') { playerGoalHeight = 320; botGoalHeight = 320; } 
-                        else if (event === '1 VS 1') { players = [players[0]]; bots = [bots[0]]; maxPlayers = 1; } 
-                        else if (event === 'PALLA INFUOCATA') { ball.baseFriction = 0.995; ball.color = '#ef4444'; }
-                        else if (event === 'GRAVITÀ ZERO') { isZeroGravity = true; }
-                        else if (event === 'GOL TRIPLO') { globalMultiplier = 3; document.getElementById('timerContainer').classList.add('bg-red-900'); }
-                        else if (event === 'PALLA GIGANTE') { ball.r = 25; ball.baseFriction = 0.98; }
+                        if (availableDiceEvents.length > 0) {
+                            const eventIndex = Math.floor(Math.random() * availableDiceEvents.length);
+                            const event = availableDiceEvents[eventIndex];
+                            availableDiceEvents.splice(eventIndex, 1); 
+                            
+                            showMessage("🎲 DADO: " + event, "from-red-500 via-yellow-500 to-blue-500", true);
+                            timerEl.classList.add('text-orange-500', 'animate-pulse');
+                            
+                            ball.r = ball.baseR;
+                            
+                            if (event === 'PORTE GIGANTI') { playerGoalHeight = 320; botGoalHeight = 320; } 
+                            else if (event === '1 VS 1') { players = [players[0]]; bots = [bots[0]]; maxPlayers = 1; } 
+                            else if (event === 'PALLA INFUOCATA') { ball.baseFriction = 0.995; ball.color = '#ef4444'; }
+                            else if (event === 'GRAVITÀ ZERO') { isZeroGravity = true; }
+                            else if (event === 'GOL TRIPLO') { globalMultiplier = 3; document.getElementById('timerContainer').classList.add('bg-red-900'); }
+                            else if (event === 'PALLA GIGANTE') { ball.r = 25; ball.baseFriction = 0.98; }
+                        }
                     }
                     
                     if(timeLeft <= 10 && timeLeft > 0) { timerEl.classList.add('text-red-500', 'animate-pulse'); playSound('ui'); }
@@ -1131,7 +1189,7 @@
                         if (scoreLeft === scoreRight) { 
                             gameState = 'SHOOTOUT'; 
                             isGoldenGoalActive = true;
-                            playSound('whistle'); showMessage("⚔️ GOLDEN GOAL!", "from-purple-400 via-fuchsia-500 to-pink-600", true); 
+                            playSound('whistle'); showMessage("⚔️ GOLDEN GOAL!", "from-red-500 via-orange-500 to-red-600", true); 
                             timerEl.innerText = "00:00"; timerEl.classList.remove('animate-pulse', 'text-red-500', 'text-orange-500'); timerEl.classList.add('text-purple-500'); 
                             document.getElementById('gameCanvas').classList.add('shootout-mode'); 
                         } else {
@@ -1148,16 +1206,31 @@
             const msgBox = document.getElementById('messageBox'); 
             if (!msgBox) return;
             
-            msgBox.innerHTML = `<span class="block animate-bounce">${text}</span>`;
+            msgBox.innerHTML = `<div class="animate-bounce"><span style="display: block;">${text}</span></div>`;
             let sizeClass = isLarge ? 'text-3xl sm:text-5xl md:text-[7rem]' : 'text-2xl sm:text-4xl md:text-6xl';
             msgBox.className = `font-black italic transition-all duration-300 pointer-events-none text-center uppercase tracking-tighter whitespace-nowrap ${sizeClass} absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full px-4 z-[100]`;
             
-            if (colorHexOrClass && colorHexOrClass.startsWith('from-')) {
-                msgBox.classList.add('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', ...colorHexOrClass.split(' '));
-                msgBox.style.webkitTextStroke = window.innerWidth > 768 ? "3px rgba(0,0,0,0.9)" : "1.5px rgba(0,0,0,0.9)"; msgBox.style.filter = "drop-shadow(0 10px 15px rgba(0,0,0,1))"; msgBox.style.color = "";
-            } else if (colorHexOrClass) {
-                msgBox.style.color = colorHexOrClass; msgBox.style.textShadow = `0px 5px 20px rgba(0,0,0,1), 0px 0px 30px ${colorHexOrClass}`; msgBox.style.webkitTextStroke = window.innerWidth > 768 ? "4px black" : "2px black";
+            let theColor = colorHexOrClass;
+            if (colorHexOrClass && colorHexOrClass.startsWith('#')) {
+                theColor = colorHexOrClass;
+            } else if (colorHexOrClass && (colorHexOrClass.includes('red') || colorHexOrClass.includes('rose') || colorHexOrClass.includes('orange'))) {
+                theColor = "#ef4444"; 
+            } else if (colorHexOrClass && (colorHexOrClass.includes('blue') || colorHexOrClass.includes('cyan') || colorHexOrClass.includes('indigo'))) {
+                theColor = "#3b82f6"; 
+            } else if (colorHexOrClass && colorHexOrClass.includes('yellow')) {
+                theColor = "#eab308"; 
+            } else if (colorHexOrClass && (colorHexOrClass.includes('green') || colorHexOrClass.includes('emerald'))) {
+                theColor = "#22c55e"; 
+            } else if (colorHexOrClass && (colorHexOrClass.includes('purple') || colorHexOrClass.includes('fuchsia') || colorHexOrClass.includes('pink'))) {
+                theColor = "#a855f7"; 
+            } else {
+                theColor = "#ffffff"; 
             }
+
+            const span = msgBox.querySelector('span');
+            span.style.color = theColor;
+            span.style.webkitTextStroke = window.innerWidth > 768 ? "3px white" : "1.5px white";
+            span.style.textShadow = `0px 10px 25px rgba(0,0,0,0.9), 0px 0px 30px ${theColor}`;
             
             msgBox.classList.remove('hidden', 'opacity-0', 'scale-150'); msgBox.classList.add('opacity-100', 'scale-100');
             setTimeout(() => { msgBox.classList.remove('opacity-100', 'scale-100'); msgBox.classList.add('opacity-0', 'scale-150'); }, 2500); 
@@ -1171,6 +1244,7 @@
             botFrozenUntilKick = false;
             freeKickState = null;
             isFoulPaused = false;
+            lastTouchedBy = null;
         }
 
         function scoreGoal(scorer) {
@@ -1236,6 +1310,23 @@
             document.getElementById('endScoreLeft').innerText = scoreLeft; document.getElementById('endScoreRight').innerText = scoreRight;
             document.getElementById('endPlayerLogo').src = myTeam.img; document.getElementById('endPlayerName').innerText = myTeam.id;
             document.getElementById('endBotLogo').src = botTeam.img; document.getElementById('endBotName').innerText = botTeam.id;
+
+            // Update Statistics
+            let totalTouches = matchStats.player.touches + matchStats.bot.touches;
+            let possP = totalTouches > 0 ? Math.round((matchStats.player.touches / totalTouches) * 100) : 50;
+            let possB = 100 - possP;
+
+            document.getElementById('statPossPlayer').innerText = possP + '%';
+            document.getElementById('statPossBot').innerText = possB + '%';
+            document.getElementById('statTouchesPlayer').innerText = matchStats.player.touches;
+            document.getElementById('statTouchesBot').innerText = matchStats.bot.touches;
+            document.getElementById('statShotsPlayer').innerText = matchStats.player.missedShots;
+            document.getElementById('statShotsBot').innerText = matchStats.bot.missedShots;
+            document.getElementById('statTacklesPlayer').innerText = matchStats.player.tackles;
+            document.getElementById('statTacklesBot').innerText = matchStats.bot.tackles;
+            
+            document.getElementById('statPlayerT').innerText = myTeam.id;
+            document.getElementById('statBotT').innerText = botTeam.id;
 
             endScreen.classList.remove('hidden');
             setTimeout(() => endScreen.classList.remove('opacity-0', 'pointer-events-none'), 50);
@@ -1316,16 +1407,16 @@
             if (!gameActive || (gameState !== 'PLAYING' && gameState !== 'SHOOTOUT') || botCardUsed) return;
             playSound('magic'); botCardUsed = true; const effect = botSecretCard; 
             showIndicator('botCardLine', cardData[effect].title);
-            if (effect === 'GOL_DOPPIO') { showMessage("🤖 BOT: GOL DOPPIO!", "from-purple-500 via-purple-700 to-indigo-800"); botDoubleGoalTimer = 60; } 
-            else if (effect === 'SOSPENSIONE') { showMessage("🤖 BOT: SOSPENSIONE!", "from-red-500 via-rose-700 to-pink-600"); players[0].isFrozen = true; botSospensioneTimer = 10; } 
-            else if (effect === 'RIGORE') { showMessage("🤖 BOT: RIGORE!", "from-zinc-100 via-cyan-200 to-blue-400", true); setupPenalty('BOT', false); } 
-            else if (effect === 'STAR_PLAYER') { showMessage("🤖 BOT: STAR PLAYER!", "from-yellow-300 via-amber-400 to-orange-500"); botStarActive = true; } 
-            else if (effect === 'JOKER') { showMessage("🤖 BOT: JOKER!", "from-fuchsia-500 via-purple-500 to-indigo-500", true); botStarActive = true; setupPenalty('BOT', false); } 
-            else if (effect === 'SHOOTOUT') { showMessage("🤖 BOT: SHOOTOUT!", "from-cyan-400 via-blue-500 to-indigo-600", true); setupPenalty('BOT', true); }
-            else if (effect === 'MURO') { showMessage("🤖 BOT: MURO!", "from-sky-400 via-blue-500 to-indigo-600"); botMuroTimer = 30; botGoalHeight = 70; }
-            else if (effect === 'FULMINE') { showMessage("🤖 BOT: FULMINE!", "from-amber-300 via-yellow-500 to-orange-600"); botSpeedTimer = 20; }
-            else if (effect === 'GHIACCIO') { showMessage("🤖 BOT: GHIACCIO!", "from-cyan-300 via-blue-400 to-indigo-500", true); players.forEach(p => { p.isFrozen = true; }); botGhiaccioTimer = 5; }
-            else if (effect === 'MAGNETE') { showMessage("🤖 BOT: MAGNETE!", "from-gray-300 via-gray-500 to-zinc-700"); botMagnetTimer = 12; }
+            if (effect === 'GOL_DOPPIO') { showMessage("🤖 BOT: GOL DOPPIO!", "from-red-500 via-red-600 to-red-700"); botDoubleGoalTimer = 60; } 
+            else if (effect === 'SOSPENSIONE') { showMessage("🤖 BOT: SOSPENSIONE!", "from-blue-500 via-blue-600 to-blue-700"); players[0].isFrozen = true; botSospensioneTimer = 10; } 
+            else if (effect === 'RIGORE') { showMessage("🤖 BOT: RIGORE!", "from-red-400 via-rose-500 to-red-600", true); setupPenalty('BOT', false); } 
+            else if (effect === 'STAR_PLAYER') { showMessage("🤖 BOT: STAR PLAYER!", "from-blue-400 via-cyan-500 to-blue-600"); botStarActive = true; } 
+            else if (effect === 'JOKER') { showMessage("🤖 BOT: JOKER!", "from-red-500 via-purple-500 to-blue-500", true); botStarActive = true; setupPenalty('BOT', false); } 
+            else if (effect === 'SHOOTOUT') { showMessage("🤖 BOT: SHOOTOUT!", "from-blue-500 via-indigo-500 to-blue-700", true); setupPenalty('BOT', true); }
+            else if (effect === 'MURO') { showMessage("🤖 BOT: MURO!", "from-red-500 via-orange-500 to-red-600"); botMuroTimer = 30; botGoalHeight = 70; }
+            else if (effect === 'FULMINE') { showMessage("🤖 BOT: FULMINE!", "from-blue-300 via-cyan-400 to-blue-500"); botSpeedTimer = 20; }
+            else if (effect === 'GHIACCIO') { showMessage("🤖 BOT: GHIACCIO!", "from-cyan-300 via-blue-400 to-blue-500", true); players.forEach(p => { p.isFrozen = true; }); botGhiaccioTimer = 5; }
+            else if (effect === 'MAGNETE') { showMessage("🤖 BOT: MAGNETE!", "from-red-600 via-red-700 to-red-800"); botMagnetTimer = 12; }
         }
 
         const cardBtnEl = document.getElementById('cardBtn');
@@ -1334,23 +1425,23 @@
             playSound('magic'); playerCardUsed = true; document.getElementById('cardBtn').classList.add('opacity-40', 'cursor-not-allowed', 'grayscale'); document.getElementById('cardBtn').innerHTML = '<span class="relative z-10 flex items-center gap-2">❌ CARTA USATA</span>'; 
 
             const effect = mySecretCard; showIndicator('playerCardLine', cardData[effect].title);
-            if (effect === 'GOL_DOPPIO') { showMessage("CARTA: GOL DOPPIO!", "from-orange-500 via-red-500 to-rose-500"); playerDoubleGoalTimer = 60; } 
-            else if (effect === 'SOSPENSIONE') { showMessage("CARTA: SOSPENSIONE!", "from-red-600 via-rose-700 to-pink-600"); bots[0].isFrozen = true; playerSospensioneTimer = 10; } 
-            else if (effect === 'RIGORE') { showMessage("CARTA: RIGORE!", "from-zinc-100 via-cyan-200 to-blue-400", true); setupPenalty('PLAYER', false); } 
-            else if (effect === 'STAR_PLAYER') { showMessage("CARTA: STAR PLAYER!", "from-yellow-300 via-amber-400 to-orange-500"); playerStarActive = true; } 
-            else if (effect === 'JOKER') { showMessage("CARTA: JOKER!", "from-fuchsia-500 via-purple-500 to-indigo-500", true); playerStarActive = true; setupPenalty('PLAYER', false); } 
-            else if (effect === 'SHOOTOUT') { showMessage("CARTA: SHOOTOUT!", "from-cyan-400 via-blue-500 to-indigo-600", true); setupPenalty('PLAYER', true); }
-            else if (effect === 'MURO') { showMessage("CARTA: MURO!", "from-sky-400 via-blue-500 to-indigo-600"); playerMuroTimer = 30; playerGoalHeight = 70; }
-            else if (effect === 'FULMINE') { showMessage("CARTA: FULMINE!", "from-amber-300 via-yellow-500 to-orange-600"); playerSpeedTimer = 20; }
-            else if (effect === 'GHIACCIO') { showMessage("CARTA: GHIACCIO!", "from-cyan-300 via-blue-400 to-indigo-500", true); bots.forEach(b => { b.isFrozen = true; }); playerGhiaccioTimer = 5; }
-            else if (effect === 'MAGNETE') { showMessage("CARTA: MAGNETE!", "from-gray-300 via-gray-500 to-zinc-700"); playerMagnetTimer = 12; }
+            if (effect === 'GOL_DOPPIO') { showMessage("CARTA: GOL DOPPIO!", "from-red-500 via-red-600 to-red-700"); playerDoubleGoalTimer = 60; } 
+            else if (effect === 'SOSPENSIONE') { showMessage("CARTA: SOSPENSIONE!", "from-blue-500 via-blue-600 to-blue-700"); bots[0].isFrozen = true; playerSospensioneTimer = 10; } 
+            else if (effect === 'RIGORE') { showMessage("CARTA: RIGORE!", "from-red-400 via-rose-500 to-red-600", true); setupPenalty('PLAYER', false); } 
+            else if (effect === 'STAR_PLAYER') { showMessage("CARTA: STAR PLAYER!", "from-blue-400 via-cyan-500 to-blue-600"); playerStarActive = true; } 
+            else if (effect === 'JOKER') { showMessage("CARTA: JOKER!", "from-red-500 via-purple-500 to-blue-500", true); playerStarActive = true; setupPenalty('PLAYER', false); } 
+            else if (effect === 'SHOOTOUT') { showMessage("CARTA: SHOOTOUT!", "from-blue-500 via-indigo-500 to-blue-700", true); setupPenalty('PLAYER', true); }
+            else if (effect === 'MURO') { showMessage("CARTA: MURO!", "from-red-500 via-orange-500 to-red-600"); playerMuroTimer = 30; playerGoalHeight = 70; }
+            else if (effect === 'FULMINE') { showMessage("CARTA: FULMINE!", "from-blue-300 via-cyan-400 to-blue-500"); playerSpeedTimer = 20; }
+            else if (effect === 'GHIACCIO') { showMessage("CARTA: GHIACCIO!", "from-cyan-300 via-blue-400 to-blue-500", true); bots.forEach(b => { b.isFrozen = true; }); playerGhiaccioTimer = 5; }
+            else if (effect === 'MAGNETE') { showMessage("CARTA: MAGNETE!", "from-red-600 via-red-700 to-red-800"); playerMagnetTimer = 12; }
         });
 
         const presBtnEl = document.getElementById('presidentBtn');
         if(presBtnEl) presBtnEl.addEventListener('click', () => {
             if (presidentPenaltyUsed || !gameActive || (gameState !== 'PLAYING' && gameState !== 'SHOOTOUT') || isPaused) return;
             playSound('magic'); presidentPenaltyUsed = true; document.getElementById('presidentBtn').classList.add('opacity-40', 'cursor-not-allowed', 'grayscale'); document.getElementById('presidentBtn').innerHTML = '<span class="relative z-10 flex items-center gap-2">❌ USATO</span>'; 
-            showIndicator('playerPresidentLine', 'RIGORE PRESID.'); showMessage("👑 RIGORE PRESIDENZIALE!", "from-yellow-300 via-amber-400 to-orange-500", true); setupPenalty('PLAYER', false);
+            showIndicator('playerPresidentLine', 'RIGORE PRESID.'); showMessage("👑 RIGORE PRESIDENZIALE!", "from-blue-500 via-cyan-500 to-blue-600", true); setupPenalty('PLAYER', false);
         });
 
         function setupPenalty(taker, isShootout) {
@@ -1406,13 +1497,23 @@
             if (dist < entity.r + b.r) {
                 if (freeKickState || botFrozenUntilKick || (players[0].isFrozen && freeKickState==='BOT')) { 
                     freeKickState = null; botFrozenUntilKick = false; players[0].isFrozen = false; 
-                    gameState = isGoldenGoalActive ? 'SHOOTOUT' : 'PLAYING'; // <--- IL FIX FONDAMENTALE DEL GOLDEN GOAL
-                    showMessage("SI GIOCA!", "from-green-300 via-emerald-400 to-teal-500"); 
+                    gameState = isGoldenGoalActive ? 'SHOOTOUT' : 'PLAYING'; 
+                    showMessage("SI GIOCA!", "from-blue-400 via-cyan-500 to-blue-600"); 
                     if (presidentPenaltyUsed) hideIndicator('playerPresidentLine');
                     if (playerCardUsed && ['RIGORE', 'SHOOTOUT', 'JOKER'].includes(mySecretCard)) hideIndicator('playerCardLine');
                     if (botCardUsed && ['RIGORE', 'SHOOTOUT', 'JOKER'].includes(botSecretCard)) hideIndicator('botCardLine');
                 }
                 playSound('kick');
+                
+                // Track Touches
+                if (ball.touchCooldown === 0) {
+                    let team = players.includes(entity) ? 'PLAYER' : 'BOT';
+                    lastTouchedBy = team;
+                    if (team === 'PLAYER') matchStats.player.touches++;
+                    else matchStats.bot.touches++;
+                    ball.touchCooldown = 15; // Cooldown for touches to avoid rapidly inflating stats
+                }
+
                 let angle = Math.atan2(dy, dx); let speedMag = Math.sqrt(entity.vx*entity.vx + entity.vy*entity.vy);
                 let kickForce = 5.5 + (speedMag * 1.6); if (kickForce > 16) kickForce = 16;
                 b.vx = Math.cos(angle) * kickForce; b.vy = Math.sin(angle) * kickForce;
@@ -1437,32 +1538,45 @@
                 
                 if (isSameTeam) {
                     let tempVx = p1.vx, tempVy = p1.vy; p1.vx = p2.vx * 0.8; p1.vy = p2.vy * 0.8; p2.vx = tempVx * 0.8; p2.vy = tempVy * 0.8;
-                // FIX FALLI: Richiede velocità relativa altissima (>9.0) e un misero 10% di probabilità
-                } else if (relSpeed > 9.0 && Math.random() < 0.1 && !isFoulPaused && (gameState === 'PLAYING' || gameState === 'SHOOTOUT')) { 
-                    isFoulPaused = true;
-                    triggerShake(20); 
-                    
-                    let foulX = p1.x + dx/2; let foulY = p1.y + dy/2;
-                    createParticlesGame(foulX, foulY, '#ffffff', 30, 3.0); 
-                    
-                    playSound('whistle');
-                    showMessage("FALLO! 🟨", "from-yellow-300 via-yellow-400 to-orange-500", true);
-                    
-                    let p1S = Math.sqrt(p1.vx*p1.vx + p1.vy*p1.vy), p2S = Math.sqrt(p2.vx*p2.vx + p2.vy*p2.vy); 
-                    let fouler = (p1S > p2S) ? p1 : p2; 
-                    let foulerType = players.includes(fouler) ? 'PLAYER' : 'BOT';
-                    
-                    [...players, ...bots].forEach(e => { e.vx = 0; e.vy = 0; e.isFrozen = true; });
-                    ball.vx = 0; ball.vy = 0;
+                } else {
+                    // Track Tackles (Contrasti)
+                    if (p1.tackleCooldown === 0 && p2.tackleCooldown === 0) {
+                        let p1S = Math.sqrt(p1.vx*p1.vx + p1.vy*p1.vy); 
+                        let p2S = Math.sqrt(p2.vx*p2.vx + p2.vy*p2.vy);
+                        if (p1S > p2S + 1.5) {
+                            if (isP1Player) matchStats.player.tackles++; else matchStats.bot.tackles++;
+                        } else if (p2S > p1S + 1.5) {
+                            if (isP2Player) matchStats.player.tackles++; else matchStats.bot.tackles++;
+                        }
+                        p1.tackleCooldown = 30; p2.tackleCooldown = 30;
+                    }
 
-                    if (foulTimeoutId) clearTimeout(foulTimeoutId);
-                    foulTimeoutId = setTimeout(() => { 
-                        isFoulPaused = false; 
-                        [...players, ...bots].forEach(e => e.isFrozen = false);
-                        setupFreeKick(foulerType, foulX, foulY); 
-                    }, 2500);
-                } else if (!isFoulPaused) {
-                    let tempVx = p1.vx, tempVy = p1.vy; p1.vx = p2.vx * 0.8; p1.vy = p2.vy * 0.8; p2.vx = tempVx * 0.8; p2.vy = tempVy * 0.8;
+                    if (relSpeed > 9.0 && Math.random() < 0.1 && !isFoulPaused && (gameState === 'PLAYING' || gameState === 'SHOOTOUT')) { 
+                        isFoulPaused = true;
+                        triggerShake(20); 
+                        
+                        let foulX = p1.x + dx/2; let foulY = p1.y + dy/2;
+                        createParticlesGame(foulX, foulY, '#ffffff', 30, 3.0); 
+                        
+                        playSound('whistle');
+                        showMessage("FALLO! 🟨", "from-red-500 via-red-600 to-red-700", true);
+                        
+                        let p1S = Math.sqrt(p1.vx*p1.vx + p1.vy*p1.vy), p2S = Math.sqrt(p2.vx*p2.vx + p2.vy*p2.vy); 
+                        let fouler = (p1S > p2S) ? p1 : p2; 
+                        let foulerType = players.includes(fouler) ? 'PLAYER' : 'BOT';
+                        
+                        [...players, ...bots].forEach(e => { e.vx = 0; e.vy = 0; e.isFrozen = true; });
+                        ball.vx = 0; ball.vy = 0;
+
+                        if (foulTimeoutId) clearTimeout(foulTimeoutId);
+                        foulTimeoutId = setTimeout(() => { 
+                            isFoulPaused = false; 
+                            [...players, ...bots].forEach(e => e.isFrozen = false);
+                            setupFreeKick(foulerType, foulX, foulY); 
+                        }, 2500);
+                    } else if (!isFoulPaused) {
+                        let tempVx = p1.vx, tempVy = p1.vy; p1.vx = p2.vx * 0.8; p1.vy = p2.vy * 0.8; p2.vx = tempVx * 0.8; p2.vy = tempVy * 0.8;
+                    }
                 }
             }
         }
@@ -1530,6 +1644,7 @@
             if (isFoulPaused) return; 
 
             if (playerSpeedTimer > 0) { players[0].stamina = 100; }
+            if (ball.touchCooldown > 0) ball.touchCooldown--;
 
             const inputs = getInputs(); let isSprinting = inputs.sprint && players[0].stamina > 0; let currentPMax = players[0].baseMaxSpeed;
             if (!players[0].isFrozen && (gameState === 'PLAYING' || gameState === 'SHOOTOUT' || freeKickState === 'PLAYER')) {
@@ -1549,6 +1664,7 @@
             for(let i=0; i<bots.length; i++) processAI(bots[i], false);
 
             for(let e of allEntities) {
+                if (e.tackleCooldown > 0) e.tackleCooldown--;
                 e.vx *= e.friction; e.vy *= e.friction; e.x += e.vx; e.y += e.vy;
                 e.y = Math.max(margin + e.r, Math.min(canvas.height - margin - e.r, e.y));
                 e.x = Math.max(margin + e.r, Math.min(canvas.width - margin - e.r, e.x));
@@ -1620,18 +1736,19 @@
 
             // Muro Sinistro e Porta Bot
             if (ball.x - ball.r < margin) {
-                if (ball.y > pGoalTop && ball.y < pGoalBottom) {
-                    // La palla è nello specchio della porta. Impediamo che esca lateralmente dalla rete.
+                if (ball.y - ball.r > pGoalTop && ball.y + ball.r < pGoalBottom) {
                     if (ball.x < margin) {
                         if (ball.y - ball.r < pGoalTop) { ball.y = pGoalTop + ball.r; ball.vy *= -0.8; }
                         if (ball.y + ball.r > pGoalBottom) { ball.y = pGoalBottom - ball.r; ball.vy *= -0.8; }
                     }
-                    // Assegna gol solo se è entrata tutta completamente
                     if (ball.x + ball.r < margin - 5) {
                         scoreGoal('BOT'); 
                     }
                 } else {
-                    // Ha colpito il muro a fianco della porta
+                    if (lastTouchedBy === 'PLAYER' && ball.vx < -5 && ball.touchCooldown === 0) { 
+                        matchStats.player.missedShots++; 
+                        lastTouchedBy = null; 
+                    }
                     ball.x = margin + ball.r; ball.vx *= -0.8; 
                     createParticlesGame(margin, ball.y, '#ffffff', 5); playSound('bounce');
                 }
@@ -1639,18 +1756,19 @@
 
             // Muro Destro e Porta Giocatore
             if (ball.x + ball.r > canvas.width - margin) {
-                if (ball.y > bGoalTop && ball.y < bGoalBottom) {
-                    // La palla è nello specchio della porta. Impediamo che esca lateralmente dalla rete.
+                if (ball.y - ball.r > bGoalTop && ball.y + ball.r < bGoalBottom) {
                     if (ball.x > canvas.width - margin) {
                         if (ball.y - ball.r < bGoalTop) { ball.y = bGoalTop + ball.r; ball.vy *= -0.8; }
                         if (ball.y + ball.r > bGoalBottom) { ball.y = bGoalBottom - ball.r; ball.vy *= -0.8; }
                     }
-                    // Assegna gol solo se è entrata tutta completamente
                     if (ball.x - ball.r > canvas.width - margin + 5) {
                         scoreGoal('PLAYER'); 
                     }
                 } else {
-                    // Ha colpito il muro a fianco della porta
+                    if (lastTouchedBy === 'BOT' && ball.vx > 5 && ball.touchCooldown === 0) { 
+                        matchStats.bot.missedShots++; 
+                        lastTouchedBy = null; 
+                    }
                     ball.x = canvas.width - margin - ball.r; ball.vx *= -0.8; 
                     createParticlesGame(canvas.width - margin, ball.y, '#ffffff', 5); playSound('bounce');
                 }
